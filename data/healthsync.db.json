@@ -1,0 +1,603 @@
+{
+  "users": [
+    {
+      "id": "usr_patient_alex",
+      "email": "patient@healthsync.io",
+      "phone": "+15550192834",
+      "fullName": "Alex Morgan",
+      "role": "patient",
+      "salt": "9b37b9f662dca02000ce1f2af35c689a",
+      "passwordHash": "f5aed06fca0161e6f3172a4c4338ac0ab96221227e6b2d19f9b8d5effcdcf93055378e4c5875371df789eeeaca5ba7e62349477d786396a00e42abbc4f058d13",
+      "isOnboarded": true,
+      "createdAt": "2026-01-10T08:00:00.000Z",
+      "updatedAt": "2026-01-10T08:00:00.000Z"
+    },
+    {
+      "id": "usr_doc_akhilesh",
+      "email": "doctor.sharma@healthsync.io",
+      "phone": "+919876543210",
+      "fullName": "Dr. Akhilesh Sharma",
+      "role": "doctor",
+      "salt": "37ad2c834a202d649c450f57db388778",
+      "passwordHash": "17046f5ddae1cf09f055c91fc805325f0644d40e7e11605d8397aead79e21da2ba89d2bdc4eb83174413789746e57fba1367a0968c6946c089470537f07e2dad",
+      "isOnboarded": true,
+      "doctorId": "doc_akhilesh",
+      "createdAt": "2026-01-01T08:00:00.000Z",
+      "updatedAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "id": "usr_pa_sarah",
+      "email": "pa.sarah@healthsync.io",
+      "phone": "+15550198844",
+      "fullName": "Sarah Jenkins",
+      "role": "pa",
+      "salt": "55597aee647d3fc9ccf9a3af899d050e",
+      "passwordHash": "c7c953ff14cc1f827b169f291b8da2a02410d515a2b2902186d0c6ed0a182e92320d6b43defe07cdee010bad9c0c884679b6cae7257bd1ce732bd89a617e5a00",
+      "isOnboarded": true,
+      "assignedDoctorId": "doc_akhilesh",
+      "createdAt": "2026-01-05T08:00:00.000Z",
+      "updatedAt": "2026-01-05T08:00:00.000Z"
+    },
+    {
+      "id": "usr_admin",
+      "email": "admin@healthsync.io",
+      "phone": "+15550009999",
+      "fullName": "HealthSync System Administrator",
+      "role": "admin",
+      "salt": "e4d9cd06007107a8d5918d03ba0dba2b",
+      "passwordHash": "93168f1a97b1d785b22a51b3e06912e17969cb61151c58d96b384098cb87d1f3b3d6372994be9b8721c9a06603e1d6c1bdd18a5117bf45ade0e095fc827c6747",
+      "isOnboarded": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "profiles": [
+    {
+      "userId": "usr_patient_alex",
+      "role": "patient",
+      "name": "Alex Morgan",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
+      "email": "patient@healthsync.io",
+      "phone": "+1 (555) 019-2834",
+      "age": 29,
+      "gender": "Female",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "Daniel Morgan",
+        "relation": "Spouse",
+        "phone": "+1 (555) 019-2835"
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [
+          "Penicillin",
+          "Sulfa drugs"
+        ],
+        "chronicConditions": [
+          "Mild seasonal asthma"
+        ],
+        "dietary": "Vegetarian",
+        "autoReminders": true
+      }
+    },
+    {
+      "userId": "usr_doc_akhilesh",
+      "role": "doctor",
+      "doctorId": "doc_akhilesh",
+      "name": "Dr. Akhilesh Sharma, MD",
+      "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      "specialty": "General Medicine & Cardiology",
+      "qualification": "MBBS, MD (Cardiology), FACC",
+      "experience": "15+ years",
+      "registrationNumber": "MCI-IND-2009-48291",
+      "consultationFee": "₹800 ($85)",
+      "availability": "Mon - Sat (08:30 AM - 09:30 PM)",
+      "clinicInfo": {
+        "hospital": "HealthSync Apex Heart & Diagnostic Institute",
+        "room": "Suite 101 - Main Clinical Wing",
+        "address": "Sector 62, Cyber City, Gurugram / New Delhi NCR"
+      }
+    },
+    {
+      "userId": "usr_pa_sarah",
+      "role": "pa",
+      "name": "Sarah Jenkins",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
+      "clinic": "Apex Heart Center - OPD Desk A",
+      "assignedDoctor": "Dr. Akhilesh Sharma, MD",
+      "assignedDoctorId": "doc_akhilesh",
+      "contactPhone": "+1 (555) 019-8844",
+      "permissions": [
+        "manage_appointments",
+        "shift_calendar",
+        "reschedule",
+        "triage_read"
+      ]
+    }
+  ],
+  "doctors": [
+    {
+      "id": "doc_akhilesh",
+      "name": "Dr. Akhilesh Sharma, MD",
+      "title": "Chief Clinical Consultant & Cardiologist",
+      "specialty": "General Medicine & Cardiology",
+      "qualification": "MBBS, MD (Cardiology), FACC",
+      "experience": "15+ years",
+      "rating": 4.96,
+      "reviewsCount": 450,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Chief Medical Consultant with extensive clinical leadership in cardiovascular medicine, preventive health, and acute outpatient care in Hindi, Hinglish & English.",
+      "consultationFee": "₹800 ($85)",
+      "feeAmount": 800,
+      "registrationNumber": "MCI-IND-2009-48291",
+      "roomNumber": "Suite 101 - Main Clinical Wing",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [
+        {
+          "id": "leave_1",
+          "title": "National Cardiology Summit",
+          "startDate": "2026-09-13",
+          "endDate": "2026-09-15",
+          "reason": "Medical Conference Recess",
+          "type": "conference"
+        }
+      ],
+      "routine": {
+        "workStart": "08:30",
+        "workEnd": "21:30",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep & Off-Hours",
+            "startTime": "22:00",
+            "endTime": "08:30",
+            "type": "sleep",
+            "description": "Doctor rest interval. OPD closed."
+          },
+          {
+            "id": "breakfast_break",
+            "name": "Morning Prep & Breakfast",
+            "startTime": "08:30",
+            "endTime": "09:30",
+            "type": "breakfast",
+            "description": "Morning chart prep and breakfast."
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch & Recharge",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break."
+          },
+          {
+            "id": "tea_break",
+            "name": "Evening Tea & Rest",
+            "startTime": "17:00",
+            "endTime": "17:30",
+            "type": "tea",
+            "description": "Refreshment break & case reviews."
+          },
+          {
+            "id": "dinner_break",
+            "name": "Dinner Break",
+            "startTime": "20:00",
+            "endTime": "21:00",
+            "type": "dinner",
+            "description": "Dinner break before night rounds."
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_vance",
+      "name": "Dr. Marcus Vance, MD",
+      "title": "Senior Diagnostician & Internist",
+      "specialty": "Internal Medicine & Diagnostics",
+      "qualification": "MD, Board Certified Internist",
+      "experience": "14 years",
+      "rating": 4.91,
+      "reviewsCount": 328,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Specializing in complex diagnostics, multi-system pathology, blood profile analysis, and chronic condition management.",
+      "consultationFee": "₹750 ($80)",
+      "feeAmount": 750,
+      "registrationNumber": "MCI-IND-2011-38194",
+      "roomNumber": "Suite 204 - Diagnostic Wing",
+      "status": "available",
+      "statusNote": "Consulting patients",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "08:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "08:00",
+            "type": "sleep",
+            "description": "Off duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Lunch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_priya",
+      "name": "Dr. Priya Sharma, MD",
+      "title": "Consultant Neurologist & Sleep Specialist",
+      "specialty": "Neurology & Sleep Medicine",
+      "qualification": "MD (Neurology), DM",
+      "experience": "12 years",
+      "rating": 4.94,
+      "reviewsCount": 290,
+      "avatar": "👩‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Dedicated specialist for migraine treatment, neurological disorders, cognitive health, stress physiology, and EEG telemetry.",
+      "consultationFee": "₹950 ($100)",
+      "feeAmount": 950,
+      "registrationNumber": "MCI-IND-2013-88210",
+      "roomNumber": "Suite 302 - Neuro Care",
+      "status": "available",
+      "statusNote": "Consulting patients",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "21:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:30",
+            "endTime": "08:30",
+            "type": "sleep",
+            "description": "Off duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:30",
+            "endTime": "14:30",
+            "type": "lunch",
+            "description": "Lunch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_patel",
+      "name": "Dr. Rajesh Patel, MS",
+      "title": "Senior Orthopedic & Joint Replacement Surgeon",
+      "specialty": "Orthopedics & Joint Care",
+      "qualification": "MS (Ortho), Fellowship in Arthroscopy & Joint Care",
+      "experience": "16+ years",
+      "rating": 4.95,
+      "reviewsCount": 410,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1594824813511-28562d4e38c3?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Senior consultant orthopedic surgeon specializing in knee and leg pain, joint preservation, spine and sports injury recovery, and arthroscopic interventions.",
+      "consultationFee": "₹900 ($95)",
+      "feeAmount": 900,
+      "registrationNumber": "MCI-IND-2010-44910",
+      "roomNumber": "Suite 201 - Bone & Joint Clinic",
+      "status": "available",
+      "statusNote": "Consulting outpatients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "08:30",
+        "workEnd": "20:30",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "08:30",
+            "type": "sleep",
+            "description": "Off duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Lunch"
+          },
+          {
+            "id": "tea_break",
+            "name": "Evening Tea & Rest",
+            "startTime": "17:00",
+            "endTime": "17:30",
+            "type": "tea",
+            "description": "Refreshment break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_khan",
+      "name": "Dr. Sameer Khan, MD",
+      "title": "Senior Pulmonologist & Critical Care Specialist",
+      "specialty": "Pulmonology & Respiratory Medicine",
+      "qualification": "MD (Pulmonary Medicine), FCCP",
+      "experience": "13 years",
+      "rating": 4.92,
+      "reviewsCount": 280,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Expertise in asthma management, COPD, post-viral pulmonary recovery, and comprehensive sleep apnea analysis.",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "registrationNumber": "MCI-IND-2012-74819",
+      "roomNumber": "Suite 108 - Respiratory Wing",
+      "status": "available",
+      "statusNote": "Consulting patients",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Off duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Lunch"
+          }
+        ]
+      }
+    }
+  ],
+  "appointments": [
+    {
+      "id": "BSY-10284",
+      "patientId": "usr_patient_alex",
+      "patientName": "Alex Morgan",
+      "patientPhone": "+1 (555) 019-2834",
+      "patientAge": 29,
+      "bloodGroup": "O+",
+      "doctorId": "doc_akhilesh",
+      "doctorName": "Dr. Akhilesh Sharma, MD",
+      "doctorSpecialty": "General Medicine & Cardiology",
+      "date": "2026-09-09",
+      "time": "10:30",
+      "durationMinutes": 30,
+      "room": "Suite 101 - Main Clinical Wing",
+      "symptoms": "Mild migraine aura, occasional dizziness, blood pressure review",
+      "urgency": "routine",
+      "status": "confirmed",
+      "fee": "₹800 ($85)",
+      "digitalPass": {
+        "passId": "DPS-10284-AX",
+        "qrHash": "HS-BSY-10284-VERIFIED-HASH",
+        "issuedAt": "2026-09-08T18:07:52.034Z",
+        "gateCode": "GATE-NORTH-101"
+      },
+      "history": [
+        {
+          "action": "created",
+          "by": "usr_patient_alex",
+          "timestamp": "2026-09-08T18:07:52.034Z",
+          "notes": "Booked via HealthSync Portal"
+        },
+        {
+          "action": "confirmed",
+          "by": "system",
+          "timestamp": "2026-09-08T18:07:52.034Z",
+          "notes": "Clinical slot confirmed"
+        }
+      ],
+      "createdAt": "2026-09-08T18:07:52.034Z",
+      "updatedAt": "2026-09-08T18:07:52.034Z"
+    },
+    {
+      "id": "BSY-10190",
+      "patientId": "usr_patient_alex",
+      "patientName": "Alex Morgan",
+      "patientPhone": "+1 (555) 019-2834",
+      "patientAge": 29,
+      "bloodGroup": "O+",
+      "doctorId": "doc_akhilesh",
+      "doctorName": "Dr. Akhilesh Sharma, MD",
+      "doctorSpecialty": "General Medicine & Cardiology",
+      "date": "2026-02-14",
+      "time": "15:00",
+      "durationMinutes": 30,
+      "room": "Suite 101 - Main Clinical Wing",
+      "symptoms": "Annual cardiovascular routine assessment & lipid profile review",
+      "urgency": "routine",
+      "status": "completed",
+      "fee": "₹800 ($85)",
+      "digitalPass": {
+        "passId": "DPS-10190-CMP",
+        "qrHash": "HS-BSY-10190-ARCHIVED",
+        "issuedAt": "2026-02-14T08:00:00.000Z",
+        "gateCode": "GATE-NORTH-101"
+      },
+      "history": [
+        {
+          "action": "completed",
+          "by": "usr_doc_akhilesh",
+          "timestamp": "2026-02-14T15:35:00.000Z",
+          "notes": "Consultation concluded. Vitals stable."
+        }
+      ],
+      "createdAt": "2026-02-10T10:00:00.000Z",
+      "updatedAt": "2026-02-14T15:35:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "fb0fcf9a42fc82bc2c125395baa7fdb87ea04a86ee3d11c831fc0c8e28403ac8",
+      "userId": "usr_doc_akhilesh",
+      "role": "doctor",
+      "createdAt": "2026-09-08T18:51:17.798Z",
+      "expiresAt": "2026-10-08T18:51:17.798Z"
+    }
+  ],
+  "passwordResets": [],
+  "emergencyReports": [],
+  "notifications": [
+    {
+      "id": "notif_1",
+      "userId": "usr_patient_alex",
+      "role": "patient",
+      "title": "Appointment Confirmed",
+      "message": "Your appointment #BSY-10284 with Dr. Akhilesh Sharma is confirmed for 2026-09-09 at 10:30 AM.",
+      "type": "appointment",
+      "read": true,
+      "createdAt": "2026-09-08T18:07:52.034Z",
+      "link": "#appointments"
+    },
+    {
+      "id": "notif_2",
+      "userId": "usr_doc_akhilesh",
+      "role": "doctor",
+      "title": "New Patient Booked",
+      "message": "Alex Morgan has booked for 2026-09-09 at 10:30 AM (Cardiology OPD).",
+      "type": "appointment",
+      "read": false,
+      "createdAt": "2026-09-08T18:07:52.034Z",
+      "link": "#schedule"
+    },
+    {
+      "id": "notif_3",
+      "userId": "usr_pa_sarah",
+      "role": "pa",
+      "title": "OPD Schedule Synchronized",
+      "message": "Apex Heart Center morning queue synchronized with Blessy AI.",
+      "type": "system",
+      "read": true,
+      "createdAt": "2026-09-08T17:07:52.034Z",
+      "link": "#operations"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_01",
+      "userId": "usr_patient_alex",
+      "title": "Cardiology Appointment Query",
+      "timestamp": "2026-09-08T18:07:52.034Z",
+      "messages": [
+        {
+          "sender": "user",
+          "text": "Meri appointment kab hai?",
+          "timestamp": "2026-09-08T18:06:52.034Z"
+        },
+        {
+          "sender": "blessy",
+          "text": "Aapki next appointment Dr. Akhilesh Sharma ke saath 2026-09-09, 10:30 AM par hai. (Appointment #BSY-10284).",
+          "timestamp": "2026-09-08T18:07:52.034Z"
+        }
+      ]
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "aud_1788893477800_r8ll",
+      "actorId": "usr_doc_akhilesh",
+      "actorRole": "doctor",
+      "actorName": "Dr. Akhilesh Sharma",
+      "action": "USER_LOGIN",
+      "resourceType": "session",
+      "resourceId": "fb0fcf9a",
+      "details": "Successful sign-in with extended session",
+      "timestamp": "2026-09-08T18:51:17.800Z"
+    },
+    {
+      "id": "aud_1788893442922_9ym5",
+      "actorId": "usr_patient_alex",
+      "actorRole": "patient",
+      "actorName": "System",
+      "action": "USER_LOGOUT",
+      "resourceType": "session",
+      "resourceId": "b1df1e6f",
+      "details": "User initiated sign out",
+      "timestamp": "2026-09-08T18:50:42.922Z"
+    },
+    {
+      "id": "aud_1788890950643_pd9j",
+      "actorId": "usr_patient_alex",
+      "actorRole": "patient",
+      "actorName": "Alex Morgan",
+      "action": "USER_LOGIN",
+      "resourceType": "session",
+      "resourceId": "b1df1e6f",
+      "details": "Successful sign-in with extended session",
+      "timestamp": "2026-09-08T18:09:10.643Z"
+    },
+    {
+      "id": "aud_01",
+      "actorId": "usr_patient_alex",
+      "actorRole": "patient",
+      "actorName": "Alex Morgan",
+      "action": "APPOINTMENT_BOOKED",
+      "resourceType": "appointment",
+      "resourceId": "BSY-10284",
+      "details": "Booked 10:30 AM slot with Dr. Akhilesh Sharma",
+      "timestamp": "2026-09-08T18:07:52.034Z"
+    },
+    {
+      "id": "aud_02",
+      "actorId": "usr_doc_akhilesh",
+      "actorRole": "doctor",
+      "actorName": "Dr. Akhilesh Sharma",
+      "action": "BUFFER_CONFIGURED",
+      "resourceType": "schedule",
+      "resourceId": "doc_akhilesh",
+      "details": "Calibrated slot buffer to 5 minutes between patient visits",
+      "timestamp": "2026-09-07T18:07:52.034Z"
+    }
+  ],
+  "systemSettings": {
+    "dataRetentionDays": 90,
+    "voiceEngine": "bilingual_hinglish",
+    "allowInstantPass": true,
+    "enforceBreakProtection": true
+  }
+}

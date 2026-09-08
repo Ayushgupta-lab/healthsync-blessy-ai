@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HealthSyncClinicalDataSchemas",
+  "description": "Production-grade schemas for Clinical Scheduling, Voice Tool Calling, and Triage",
+  "definitions": {
+    "Doctor": {
+      "type": "object",
+      "required": ["id", "name", "title", "specialty", "experience", "consultationFee", "roomNumber", "status", "routine"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^doc_[a-zA-Z0-9_-]+$" },
+        "name": { "type": "string", "example": "Dr. Akhilesh Sharma, MD" },
+        "title": { "type": "string" },
+        "specialty": { "type": "string" },
+        "experience": { "type": "string" },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "reviewsCount": { "type": "integer", "minimum": 0 },
+        "avatar": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "bio": { "type": "string" },
+        "consultationFee": { "type": "string", "example": "₹800 ($85)" },
+        "feeAmount": { "type": "number", "example": 800 },
+        "roomNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "on_break", "in_consultation", "in_surgery", "off_duty"] },
+        "statusNote": { "type": "string" },
+        "runningDelayMinutes": { "type": "integer", "default": 0 },
+        "activeSurgery": {
+          "type": ["object", "null"],
+          "properties": {
+            "id": { "type": "string" },
+            "procedureName": { "type": "string" },
+            "startTime": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+            "endTime": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+            "targetDate": { "type": "string", "format": "date" },
+            "otRoom": { "type": "string" }
+          }
+        },
+        "leaves": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Leave" }
+        },
+        "routine": {
+          "type": "object",
+          "required": ["workStart", "workEnd", "slotDurationMinutes"],
+          "properties": {
+            "workStart": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+            "workEnd": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+            "slotDurationMinutes": { "type": "integer", "enum": [15, 30, 45, 60] },
+            "bufferMinutes": { "type": "integer", "default": 5 },
+            "breaks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "name", "startTime", "endTime", "type"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "startTime": { "type": "string" },
+                  "endTime": { "type": "string" },
+                  "type": { "type": "string", "enum": ["breakfast", "lunch", "tea", "dinner", "sleep", "custom"] },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Slot": {
+      "type": "object",
+      "required": ["doctorId", "date", "startTime", "endTime", "status"],
+      "properties": {
+        "doctorId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "startTime": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+        "endTime": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+        "durationMinutes": { "type": "integer" },
+        "timeFormatted": { "type": "string" },
+        "period": { "type": "string", "enum": ["morning", "afternoon", "evening"] },
+        "status": { "type": "string", "enum": ["available", "booked", "break", "surgery", "leave"] },
+        "meta": { "type": ["object", "null"] }
+      }
+    },
+    "Appointment": {
+      "type": "object",
+      "required": ["id", "doctorId", "doctorName", "date", "time", "patientName", "patientPhone", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^APT-\\d{4,}$" },
+        "doctorId": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "doctorSpecialty": { "type": "string" },
+        "room": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "durationMinutes": { "type": "integer", "default": 30 },
+        "patientName": { "type": "string" },
+        "patientPhone": { "type": "string" },
+        "patientAge": { "type": "integer" },
+        "bloodGroup": { "type": "string" },
+        "symptoms": { "type": "string" },
+        "urgency": { "type": "string", "enum": ["routine", "moderate", "urgent", "emergency"] },
+        "status": { "type": "string", "enum": ["confirmed", "pending_pa", "completed", "cancelled", "shifted"] },
+        "fee": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      }
+    },
+    "Leave": {
+      "type": "object",
+      "required": ["id", "title", "startDate", "endDate", "reason", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "reason": { "type": "string" },
+        "type": { "type": "string", "enum": ["vacation", "conference", "medical", "personal"] }
+      }
+    },
+    "EmergencyReport": {
+      "type": "object",
+      "required": ["patientName", "symptoms", "urgencyLevel", "actionTaken", "timestamp"],
+      "properties": {
+        "patientName": { "type": "string" },
+        "symptoms": { "type": "string" },
+        "urgencyLevel": { "type": "string", "enum": ["CRITICAL_ER", "URGENT_TRIAGE"] },
+        "location": { "type": "string" },
+        "contactsProvided": { "type": "array", "items": { "type": "string" } },
+        "bookingHeld": { "type": "boolean", "default": true },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ToolCall": {
+      "type": "object",
+      "required": ["name", "parameters"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "checkSlotAvailability",
+            "bookAppointment",
+            "rescheduleAppointment",
+            "blockDoctorCalendar",
+            "reportEmergency"
+          ]
+        },
+        "parameters": { "type": "object" }
+      }
+    }
+  }
+}

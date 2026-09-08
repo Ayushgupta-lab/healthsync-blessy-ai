@@ -1,0 +1,638 @@
+/* Patient Panel Styles: Doctor Selection, Routine Schedule Banner, Booking Flow & Pass */
+
+.patient-header-hero {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.hero-title-group h2 {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+
+.hero-title-group p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.ai-assistant-banner-btn {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  text-align: left;
+}
+
+.ai-assistant-banner-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 8px 24px var(--accent-cyan-glow);
+}
+
+.ai-banner-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.ai-banner-text strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.ai-banner-text span {
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+}
+
+/* Doctor Selection Cards */
+.doctor-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.doc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-card:hover {
+  border-color: var(--border-active);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.doc-card.selected {
+  border-color: var(--accent-cyan);
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.12) 0%, var(--bg-surface) 100%);
+  box-shadow: 0 0 20px var(--accent-cyan-glow);
+}
+
+.doc-card-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.doc-avatar-wrapper {
+  position: relative;
+}
+
+.doc-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.doc-live-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-surface);
+}
+
+.doc-live-dot.available { background: var(--color-available); }
+.doc-live-dot.on_break { background: var(--color-break); }
+.doc-live-dot.off_duty { background: var(--color-sleep); }
+.doc-live-dot.in_consultation { background: var(--color-in-consult); }
+
+.doc-info-block h3 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.doc-specialty-badge {
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.doc-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.doc-live-status-pill {
+  margin-top: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doc-live-status-pill.status-available {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+
+.doc-live-status-pill.status-on_break {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.doc-live-status-pill.status-off_duty {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c084fc;
+}
+
+/* Intelligent Scheduling Reassurance Strip */
+.doctor-routine-banner {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.75rem;
+  backdrop-filter: blur(12px);
+}
+
+.guarantee-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.guarantee-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.guarantee-text {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.guarantee-text strong {
+  color: #38bdf8;
+  margin-right: 0.35rem;
+}
+
+.break-timeline-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.break-pill {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 0.95rem;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+.break-pill:hover {
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.break-pill .pill-time {
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.break-pill.sleep-pill .pill-time {
+  color: #c084fc;
+}
+
+/* Booking Layout */
+.booking-section-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.75rem;
+}
+
+@media (max-width: 960px) {
+  .booking-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Calendar & Date Selector */
+.date-selector-bar {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.date-pill-btn {
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: var(--transition-normal);
+  min-width: 90px;
+}
+
+.date-pill-btn:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+.date-pill-btn.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(14, 165, 233, 0.3));
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+}
+
+.date-pill-day {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.date-pill-num {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* Legend for Slots */
+.slot-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-box.avail { background: rgba(16, 185, 129, 0.6); border: 1px solid #10b981; }
+.legend-box.break { background: rgba(245, 158, 11, 0.6); border: 1px solid #f59e0b; }
+.legend-box.booked { background: rgba(239, 68, 68, 0.6); border: 1px solid #ef4444; }
+.legend-box.sleep { background: rgba(139, 92, 246, 0.6); border: 1px solid #8b5cf6; }
+
+/* Patient Intake Form */
+.intake-summary-card {
+  height: fit-content;
+}
+
+.pain-scale-group {
+  margin-top: 0.5rem;
+}
+
+.pain-slider {
+  width: 100%;
+  accent-color: var(--accent-cyan);
+}
+
+.pain-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Appointments List */
+.my-appointments-section {
+  margin-top: 3.5rem;
+}
+
+.my-appointments-section h3 {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.appointments-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.apt-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition-normal);
+  position: relative;
+}
+
+.apt-card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-md);
+}
+
+.apt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+
+.apt-id {
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.apt-doc-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 0.15rem;
+}
+
+.apt-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.85rem;
+}
+
+.apt-symptoms-snippet {
+  background: var(--bg-surface-elevated);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.15rem;
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.apt-actions-row {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+/* Digital Pass Modal Visuals */
+.digital-pass-card {
+  background: linear-gradient(145deg, #111e40, #172754);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.pass-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.pass-qr-mock {
+  width: 90px;
+  height: 90px;
+  background: #ffffff;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pass-qr-mock svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Doctor Life Alert Banners (Surgery, Vacation, Running Delay) */
+.doc-life-alert {
+  border-radius: var(--radius-md);
+  padding: 0.95rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.doc-life-alert.surgery {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fecaca;
+}
+
+.doc-life-alert.delay {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fef3c7;
+}
+
+.doc-life-alert.leave {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: #e9d5ff;
+}
+
+.doc-life-alert strong {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Variable Duration Selector */
+.duration-selector-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.duration-pill {
+  flex: 1;
+  min-width: 110px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.duration-pill:hover {
+  border-color: var(--accent-cyan);
+  background: var(--bg-surface-elevated);
+}
+
+.duration-pill.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.35));
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+.duration-pill strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #ffffff;
+}
+
+.duration-pill span {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* Smart Symptom Helper Tray */
+.symptom-helper-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.symptom-helper-chip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: #e0f2fe;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.symptom-helper-chip:hover {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+}
+
+/* Report & Symptom Image Upload Dropzone */
+.attachment-upload-section {
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.attachment-dropzone {
+  border: 2px dashed rgba(6, 182, 212, 0.4);
+  background: rgba(10, 18, 40, 0.5);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.attachment-dropzone:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.08);
+}
+
+.attachment-previews-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.attachment-preview-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  color: #ffffff;
+}
+
+.attachment-remove-btn {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+/* Prescription in Pass */
+.digital-prescription-box {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  margin-top: 1rem;
+  color: #a7f3d0;
+  font-size: 0.84rem;
+}

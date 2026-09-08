@@ -1,0 +1,533 @@
+/* ==========================================================================
+   Google Gemini Live Healthcare Voice Experience - Ultra-Premium UI & Styling
+   ========================================================================== */
+
+/* Top Navigation Voice Launch Button */
+.voice-nav-pill {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.35));
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-shadow: 0 0 22px rgba(6, 182, 212, 0.35);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.voice-nav-pill:hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(139, 92, 246, 0.5));
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 32px rgba(56, 189, 248, 0.6);
+  border-color: #67e8f9;
+}
+
+.voice-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+  animation: geminiDotPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes geminiDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+/* Fullscreen Gemini Live Backdrop */
+.voice-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(17, 24, 49, 0.94) 0%, rgba(5, 8, 18, 0.98) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Gemini Live Studio Card */
+.gemini-live-card {
+  width: 720px;
+  max-width: 100%;
+  background: rgba(14, 21, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 28px;
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(6, 182, 212, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: geminiCardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes geminiCardEntrance {
+  from { transform: scale(0.9) translateY(24px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Top Controls Bar */
+.gemini-live-top-bar {
+  padding: 1.15rem 1.5rem;
+  background: rgba(22, 32, 62, 0.65);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.gemini-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gemini-sparkle-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0284c7, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+}
+
+.gemini-brand-badge h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, #ffffff, #67e8f9, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.live-subtitle-badge {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: block;
+}
+
+.gemini-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* Role Switcher Pill */
+.role-pill-switcher {
+  display: flex;
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  padding: 3px;
+}
+
+.role-pill-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.role-pill-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+}
+
+/* Language Selector */
+.voice-lang-select {
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #e0f2fe;
+  font-family: var(--font-heading);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.38rem 0.75rem;
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+}
+
+.gemini-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.gemini-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Central Gemini Live Fluid Orb Visualizer */
+.gemini-visualizer-section {
+  padding: 2.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(14, 165, 233, 0.08) 0%, transparent 70%);
+}
+
+.gemini-fluid-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fluid Organic Morphing Orb */
+.gemini-morphing-orb {
+  width: 110px;
+  height: 110px;
+  border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  background: linear-gradient(135deg, #00d2ff, #3a7bd5, #8a2387, #e94057);
+  background-size: 300% 300%;
+  animation: geminiMorph 6s ease-in-out infinite, geminiGradShift 8s ease infinite alternate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 0 50px rgba(0, 210, 255, 0.5),
+    0 0 100px rgba(138, 35, 135, 0.35);
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+@keyframes geminiMorph {
+  0% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: rotate(0deg) scale(1); }
+  25% { border-radius: 58% 42% 40% 60% / 55% 65% 35% 45%; }
+  50% { border-radius: 30% 70% 50% 50% / 30% 30% 70% 70%; transform: rotate(180deg) scale(1.05); }
+  75% { border-radius: 65% 35% 60% 40% / 40% 60% 40% 60%; }
+  100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: rotate(360deg) scale(1); }
+}
+
+@keyframes geminiGradShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.orb-inner-sparkle {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+}
+
+.orb-blessy-logo {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 24px rgba(0, 210, 255, 0.8);
+  pointer-events: none;
+}
+
+.gemini-fluid-aura {
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(139, 92, 246, 0.25) 40%, transparent 70%);
+  animation: geminiAuraPulse 3s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes geminiAuraPulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 0.95; }
+}
+
+/* Soundwave Bars */
+.gemini-soundwave-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 48px;
+  margin-top: 1.5rem;
+}
+
+.gem-bar {
+  width: 5px;
+  height: 10px;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: var(--radius-full);
+  transition: height 0.15s ease, background 0.2s ease;
+}
+
+/* State Reactions */
+.gemini-visualizer-section.state-listening .gemini-morphing-orb {
+  background: linear-gradient(135deg, #ef4444, #f97316, #e11d48);
+  box-shadow: 0 0 60px rgba(239, 68, 68, 0.7), 0 0 120px rgba(249, 115, 22, 0.4);
+  transform: scale(1.08);
+}
+
+.gemini-visualizer-section.state-listening .gem-bar {
+  background: linear-gradient(to top, #ef4444, #fca5a5);
+  animation: gemWaveListen 0.7s infinite ease-in-out alternate;
+}
+
+.gemini-visualizer-section.state-speaking .gemini-morphing-orb {
+  background: linear-gradient(135deg, #00f2fe, #4facfe, #00c6ff);
+  box-shadow: 0 0 60px rgba(0, 242, 254, 0.7), 0 0 120px rgba(79, 172, 254, 0.4);
+  transform: scale(1.1);
+}
+
+.gemini-visualizer-section.state-speaking .gem-bar {
+  background: linear-gradient(to top, #38bdf8, #818cf8);
+  animation: gemWaveSpeak 0.5s infinite ease-in-out alternate;
+}
+
+.gemini-visualizer-section.state-thinking .gem-bar {
+  background: #c084fc;
+  animation: gemWaveThink 1.2s infinite ease-in-out alternate;
+}
+
+.gem-bar.bar-1 { animation-delay: 0.05s; }
+.gem-bar.bar-2 { animation-delay: 0.15s; }
+.gem-bar.bar-3 { animation-delay: 0.25s; }
+.gem-bar.bar-4 { animation-delay: 0.35s; }
+.gem-bar.bar-5 { animation-delay: 0.25s; }
+.gem-bar.bar-6 { animation-delay: 0.15s; }
+.gem-bar.bar-7 { animation-delay: 0.05s; }
+
+@keyframes gemWaveListen {
+  0% { height: 8px; }
+  100% { height: 46px; }
+}
+
+@keyframes gemWaveSpeak {
+  0% { height: 10px; }
+  50% { height: 48px; }
+  100% { height: 16px; }
+}
+
+@keyframes gemWaveThink {
+  0% { height: 8px; }
+  100% { height: 30px; }
+}
+
+/* Status Pill */
+.gemini-live-status-pill {
+  margin-top: 1.1rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 0.45rem 1.15rem;
+  border-radius: var(--radius-full);
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: geminiDotPulse 1.5s infinite;
+}
+
+/* Captions & Dialogue Screen */
+.gemini-captions-container {
+  padding: 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.gemini-speech-bubble {
+  border-radius: var(--radius-md);
+  padding: 0.95rem 1.15rem;
+  transition: var(--transition-normal);
+}
+
+.gemini-speech-bubble.user-caption {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gemini-speech-bubble.bot-caption {
+  background: rgba(30, 41, 79, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.caption-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.caption-tag.bot-tag {
+  color: #38bdf8;
+}
+
+.caption-text {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #f8fafc;
+}
+
+/* Prompts Tray */
+.gemini-prompts-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 1.15rem 1.75rem 0.5rem;
+}
+
+.gemini-chip-btn {
+  background: rgba(22, 32, 62, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #e0f2fe;
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.gemini-chip-btn:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(99, 102, 241, 0.35));
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* Bottom Gemini Dock */
+.gemini-bottom-dock {
+  padding: 1.25rem 1.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 26, 52, 0.75);
+  gap: 1rem;
+}
+
+.dock-pill-btn {
+  background: rgba(14, 21, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dock-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.gemini-live-mic-btn {
+  width: 220px;
+  height: 54px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #0284c7, #06b6d4, #6366f1);
+  border: none;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(6, 182, 212, 0.45);
+  transition: var(--transition-fast);
+  position: relative;
+}
+
+.gemini-live-mic-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.6);
+}
+
+.gemini-live-mic-btn.active-listening {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6);
+}
+
+.mic-glow-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-full);
+  border: 2px solid #38bdf8;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gemini-live-mic-btn.active-listening .mic-glow-ring {
+  border-color: #ef4444;
+  animation: geminiRingPulse 1.4s infinite;
+  opacity: 1;
+}
+
+@keyframes geminiRingPulse {
+  0% { transform: scale(0.98); opacity: 0.9; }
+  100% { transform: scale(1.16); opacity: 0; }
+}
