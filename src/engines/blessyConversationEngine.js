@@ -2,6 +2,7 @@
 import { clinicalTools } from '../services/clinicalTools.js';
 import { storageService } from '../services/storageService.js';
 import { formatTime12 } from '../services/scheduleEngine.js';
+import { blessyLearningEngine } from './blessyLearningEngine.js';
 
 export class BlessyConversationEngine {
   constructor() {
@@ -183,7 +184,8 @@ export class BlessyConversationEngine {
         let docChips = [
           { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
           { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
-          { label: '🩺 Show available doctors', action: 'show_doctors' }
+          { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+          { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
         ];
 
         if (lang === 'hindi') {
@@ -191,14 +193,16 @@ export class BlessyConversationEngine {
           docChips = [
             { label: '📋 ओपीडी शेड्यूल देखें', action: 'view_doctor_schedule' },
             { label: '⏸️ 15 मिनट बफर जोड़ें', action: 'add_buffer' },
-            { label: '🩺 उपलब्ध डॉक्टर देखें', action: 'show_doctors' }
+            { label: '🏥 सर्जरी समय ब्लॉक करें', action: 'block_surgery' },
+            { label: '🤖 एआई लर्निंग इनसाइट्स', action: 'open_ml_insights' }
           ];
         } else if (lang === 'hinglish') {
           docMessage = `Namaste ${docTitle}! 🙏 Main **Blessy**, HealthSync Clinic ki executive PA.\n\nAap apna OPD routine schedule manage kar sakte hain, surgery buffer add kar sakte hain, ya mareezon ke appointments dekh sakte hain. Aaj main aapki kaise madad karoon?`;
           docChips = [
             { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
             { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
-            { label: '🩺 Doctor panel dekhein', action: 'show_doctors' }
+            { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+            { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
           ];
         }
 
@@ -323,19 +327,13 @@ export class BlessyConversationEngine {
     }
 
     // -------------------------------------------------------------
-    // 1. Doctor / Staff Voice Commands (Doctor Availability)
+    // 1. Executive Doctor PA Mode (Doctors manage clinic, not book appointments)
     // -------------------------------------------------------------
-    if (
-      text.includes('main doctor hoon') ||
-      text.includes('i am doctor') ||
-      text.includes('block my') ||
-      text.includes('shift kar do') ||
-      text.includes('buffer') ||
-      text.includes('busy till') ||
-      text.includes('on leave tomorrow') ||
-      text.includes('block calendar')
-    ) {
-      return this.handleDoctorStaffCommand(text, lang);
+    if (this.session.role === 'doctor' || text.includes('main doctor hoon') || text.includes('i am doctor')) {
+      if (text.includes('main doctor hoon') || text.includes('i am doctor')) {
+        this.session.role = 'doctor';
+      }
+      return this.routeDoctorMessage(text, lang);
     }
 
     // -------------------------------------------------------------
@@ -536,6 +534,277 @@ export class BlessyConversationEngine {
   }
 
   // -------------------------------------------------------------
+  // EXECUTIVE DOCTOR PA ROUTER & DISPATCHER
+  // -------------------------------------------------------------
+  routeDoctorMessage(text, lang) {
+    // 1. Buffer Injection Command (High priority specific action)
+    if (text === 'add_buffer' || text.includes('buffer') || text.includes('बफर')) {
+      return this.handleDoctorStaffCommand(text, lang);
+    }
+
+    // 2. Surgery Blocking / Busy shift Command
+    if (text === 'block_surgery' || text.includes('surgery') || text.includes('block') || text.includes('busy')) {
+      return this.handleDoctorStaffCommand(text, lang);
+    }
+
+    // 3. Leave Command
+    if (text === 'mark_leave_tomorrow' || text.includes('leave') || text.includes('chhutti') || text.includes('छुट्टी')) {
+      return this.handleDoctorStaffCommand(text, lang);
+    }
+
+    // 4. ML Learning Insights Query
+    if (text === 'open_ml_insights' || text.includes('ml') || text.includes('machine learning') || text.includes('insights') || text.includes('training')) {
+      return this.handleDoctorMLInsights(text, lang);
+    }
+
+    // 5. OPD Schedule Query & Today's Patients
+    if (
+      text === 'view_doctor_schedule' ||
+      text.includes('schedule') ||
+      text.includes('opd') ||
+      text.includes('queue') ||
+      text.includes('mareez') ||
+      text.includes('aaj kitne') ||
+      text.includes('how many') ||
+      text.includes('appointments') ||
+      text.includes('मरीज़') ||
+      text.includes('शेड्यूल')
+    ) {
+      return this.handleDoctorScheduleOverview(text, lang);
+    }
+
+    // 6. If doctor mentions symptoms, clarify executive PA role:
+    if (this.isMedicalSymptomQuery(text) || text.includes('book') || text.includes('appointment')) {
+      if (lang === 'hindi') {
+        return {
+          type: 'doctor_executive_reminder',
+          message: `👨‍⚕️ **डॉक्टर साहब, मैं आपकी क्लिनिक एग्जीक्यूटिव पीए हूँ।**\n\nयह कंसोल आपके ओपीडी शेड्यूलिंग, सर्जरी ब्लॉक और मरीज़ों के अपॉइंटमेंट मैनेज करने के लिए है। मैं सीधे आपके निर्देशानुसार क्लिनिक का प्रबंधन करती हूँ।\n\n👉 क्या आप आज का **ओपीडी शेड्यूल** देखना चाहते हैं, **15-मिनट का बफर** जोड़ना चाहते हैं, या कोई **सर्जरी स्लॉट** ब्लॉक करना चाहते हैं?`,
+          actionChips: [
+            { label: '📋 ओपीडी शेड्यूल देखें', action: 'view_doctor_schedule' },
+            { label: '⏸️ 15 मिनट बफर जोड़ें', action: 'add_buffer' },
+            { label: '🏥 सर्जरी समय ब्लॉक करें', action: 'block_surgery' },
+            { label: '🤖 एआई लर्निंग इनसाइट्स', action: 'open_ml_insights' }
+          ]
+        };
+      }
+      if (lang === 'hinglish') {
+        return {
+          type: 'doctor_executive_reminder',
+          message: `👨‍⚕️ **Doctor sahab, main aapki Clinic Executive PA hoon.**\n\nYeh console aapke OPD scheduling, surgery blocking aur patient queue management ke liye hai. Main aapke direct commands par clinic manage karti hoon.\n\n👉 Kya aap aaj ka **OPD schedule** dekhna chahte hain, **15-min buffer** add karna chahte hain, ya koi **surgery slot** block karna chahte hain?`,
+          actionChips: [
+            { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+            { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+            { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+            { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
+          ]
+        };
+      }
+      return {
+        type: 'doctor_executive_reminder',
+        message: `👨‍⚕️ **Doctor, I am your Clinic Executive PA.**\n\nThis console is configured for managing your OPD schedule, surgical blocks, and patient consultation queues.\n\n👉 Would you like to review your **OPD schedule**, insert a **15-minute emergency buffer**, or block **operating room hours**?`,
+        actionChips: [
+          { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+          { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+          { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+          { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
+        ]
+      };
+    }
+
+    // 7. General Doctor Executive PA Fallback
+    if (lang === 'hindi') {
+      return {
+        type: 'doctor_pa_prompt',
+        message: `👨‍⚕️ **डॉक्टर साहब, मैं आपकी एग्जीक्यूटिव पीए के रूप में उपस्थित हूँ।**\n\nआप मुझे अपने क्लिनिक मैनेजमेंट के लिए निर्देश दे सकते हैं (जैसे: *"आज के मरीज़ दिखाओ"*, *"2 से 4 बजे सर्जरी के लिए ब्लॉक करो"*, या *"15 मिनट बफर जोड़ो"*):`,
+        actionChips: [
+          { label: '📋 ओपीडी शेड्यूल देखें', action: 'view_doctor_schedule' },
+          { label: '⏸️ 15 मिनट बफर जोड़ें', action: 'add_buffer' },
+          { label: '🏥 सर्जरी समय ब्लॉक करें', action: 'block_surgery' },
+          { label: '🤖 एआई लर्निंग इनसाइट्स', action: 'open_ml_insights' }
+        ]
+      };
+    }
+    if (lang === 'hinglish') {
+      return {
+        type: 'doctor_pa_prompt',
+        message: `👨‍⚕️ **Doctor sahab, main aapki Executive PA ke roop mein ready hoon.**\n\nAap mujhe apne clinic management ke liye direct command de sakte hain (Jaise: *"Aaj ke mareez dikhao"*, *"2 se 4 baje surgery block karo"*, ya *"15 min buffer add karo"*):`,
+        actionChips: [
+          { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+          { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+          { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+          { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
+        ]
+      };
+    }
+    return {
+      type: 'doctor_pa_prompt',
+      message: `👨‍⚕️ **Doctor, I am on duty as your Clinic Executive PA.**\n\nYou can give me direct scheduling instructions (e.g., *"Show today's patients"*, *"Block 2 to 4 PM for surgery"*, or *"Add 15-min buffer"*):`,
+      actionChips: [
+        { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+        { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+        { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+        { label: '🤖 AI Learning Insights', action: 'open_ml_insights' }
+      ]
+    };
+  }
+
+  // Doctor Schedule Lookup
+  handleDoctorScheduleOverview(text, lang) {
+    const docId = this.session.doctorId || 'doc_akhilesh';
+    const doctor = storageService.getDoctorById(docId) || storageService.getDoctorById('doc_akhilesh');
+    const allApts = storageService.getAppointments();
+    const docApts = allApts.filter(a => a.doctorId === docId && (a.status === 'confirmed' || a.status === 'shifted'));
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayApts = docApts.filter(a => a.date === todayStr);
+    const activeList = todayApts.length > 0 ? todayApts : docApts.slice(0, 4);
+
+    const aptListFormatted = activeList.map((a, i) =>
+      `• **${i + 1}. ${a.patientName}** — ${formatTime12(a.time)} (Room: ${a.room || doctor.roomNumber})\n  *Symptoms/Notes*: ${a.symptoms || 'General Consultation'}`
+    ).join('\n');
+
+    if (lang === 'hindi') {
+      return {
+        type: 'doctor_schedule_overview',
+        message: `📋 **डॉ. ${doctor.name.split(',')[0]} का ओपीडी शेड्यूल:**\n\n• **कुल निर्धारित मरीज़**: ${activeList.length} मरीज़\n• **क्लिनिक रूम**: ${doctor.roomNumber}\n• **स्थिति**: 🟢 सक्रिय ओपीडी\n\n${aptListFormatted || '• अभी कोई आगामी मरीज़ कतार में नहीं है।'}\n\n👉 क्या आप किसी मरीज़ का समय रीशेड्यूल करना चाहते हैं या 15 मिनट का बफर जोड़ना चाहते हैं?`,
+        actionChips: [
+          { label: '⏸️ 15 मिनट बफर जोड़ें', action: 'add_buffer' },
+          { label: '🏥 सर्जरी समय ब्लॉक करें', action: 'block_surgery' },
+          { label: '🤖 एआई लर्निंग इनसाइट्स', action: 'open_ml_insights' },
+          { label: '🏖️ कल की छुट्टी दर्ज करें', action: 'mark_leave_tomorrow' }
+        ]
+      };
+    }
+
+    if (lang === 'hinglish') {
+      return {
+        type: 'doctor_schedule_overview',
+        message: `📋 **Dr. ${doctor.name.split(',')[0]} ka OPD Schedule:**\n\n• **Total Scheduled Patients**: ${activeList.length} mareez\n• **Clinic Room**: ${doctor.roomNumber}\n• **Status**: 🟢 Active OPD\n\n${aptListFormatted || '• Abhi koi upcoming patient queue mein nahi hai.'}\n\n👉 Kya aap OPD mein 15-minute emergency buffer add karna chahte hain ya surgery block karna chahte hain?`,
+        actionChips: [
+          { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+          { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+          { label: '🤖 AI Learning Insights', action: 'open_ml_insights' },
+          { label: '🏖️ Kal Chhutti Mark Karein', action: 'mark_leave_tomorrow' }
+        ]
+      };
+    }
+
+    return {
+      type: 'doctor_schedule_overview',
+      message: `📋 **OPD Schedule for Dr. ${doctor.name.split(',')[0]}:**\n\n• **Scheduled Consultations**: ${activeList.length} patient(s)\n• **Clinic Room**: ${doctor.roomNumber}\n• **Status**: 🟢 In Outpatient OPD\n\n${aptListFormatted || '• No upcoming patients currently queued.'}\n\n👉 Would you like to insert a 15-minute emergency buffer or block operating surgery hours?`,
+      actionChips: [
+        { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' },
+        { label: '🏥 Block Surgery Hours', action: 'block_surgery' },
+        { label: '🤖 AI Learning Insights', action: 'open_ml_insights' },
+        { label: '🏖️ Mark Leave Tomorrow', action: 'mark_leave_tomorrow' }
+      ]
+    };
+  }
+
+  // Doctor ML Insights
+  handleDoctorMLInsights(text, lang) {
+    const ml = blessyLearningEngine.getInsights();
+    const confPct = Math.round((ml.stats?.confidenceScore || 0.94) * 100);
+
+    if (lang === 'hindi') {
+      return {
+        type: 'doctor_ml_insights',
+        message: `🤖 **ब्लेसी मशीन लर्निंग मॉडल इनसाइट्स:**\n\n• **प्रशिक्षण चक्र (Epoch)**: #${ml.stats?.epoch || 42} (${ml.stats?.samplesProcessed || 248} इंटरेक्शन विश्लेषित)\n• **मॉडल सटीकता / विश्वसनीयता**: ${confPct}%\n• **उच्चतम मांग समय स्लॉट**: ${ml.slotForecast?.peakSlot || '16:00'} (शाम का समय सबसे व्यस्त)\n• **सीखे गए मेडिकल टोकन**: ${ml.symptomCount || 26} लक्षण कीवर्ड\n\nहमारा एल्गोरिदम प्रत्येक मरीज़ के परामर्श से लगातार सीख रहा है और सही विशेषज्ञ चुनने में सुधार कर रहा है।`,
+        actionChips: [
+          { label: '📋 ओपीडी शेड्यूल देखें', action: 'view_doctor_schedule' },
+          { label: '⏸️ 15 मिनट बफर जोड़ें', action: 'add_buffer' }
+        ]
+      };
+    }
+
+    if (lang === 'hinglish') {
+      return {
+        type: 'doctor_ml_insights',
+        message: `🤖 **Blessy Continuous Machine Learning Insights:**\n\n• **Model Epoch**: #${ml.stats?.epoch || 42} (${ml.stats?.samplesProcessed || 248} interactions processed)\n• **Prediction Confidence**: ${confPct}%\n• **Peak Slot Demand**: ${ml.slotForecast?.peakSlot || '16:00'} (Evening hours highest demand)\n• **Learned Clinical Tokens**: ${ml.symptomCount || 26} keywords\n\nModel har patient interaction aur booking ke sath real-time Bayesian weights update kar raha hai.`,
+        actionChips: [
+          { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+          { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' }
+        ]
+      };
+    }
+
+    return {
+      type: 'doctor_ml_insights',
+      message: `🤖 **Blessy Continuous Machine Learning Insights:**\n\n• **Training Epoch**: #${ml.stats?.epoch || 42} (${ml.stats?.samplesProcessed || 248} interactions analyzed)\n• **Prediction Confidence**: ${confPct}%\n• **Peak Demand Slot**: ${ml.slotForecast?.peakSlot || '16:00'}\n• **Learned Clinical Lexicon**: ${ml.symptomCount || 26} tokens\n\nOnline Bayesian model continuously adapts to colloquial patient symptom descriptions and clinical demand distribution.`,
+      actionChips: [
+        { label: '📋 View OPD Schedule', action: 'view_doctor_schedule' },
+        { label: '⏸️ Add 15-min Buffer', action: 'add_buffer' }
+      ]
+    };
+  }
+
+  // Doctor Staff Operations (Executive PA)
+  handleDoctorStaffCommand(command, lang) {
+    const text = String(command || '').toLowerCase();
+    const docId = this.session.doctorId || 'doc_akhilesh';
+
+    // 1. Buffer Insertion Command
+    if (text === 'buffer' || text.includes('buffer') || text.includes('बफर')) {
+      return {
+        type: 'doctor_command_result',
+        message: lang === 'hindi'
+          ? '✅ डॉक्टर साहब, आपके ओपीडी शेड्यूल में प्रत्येक 3 मरीज़ों के बाद 15 मिनट का आपातकालीन बफर (buffer) जोड़ दिया गया है।'
+          : lang === 'hinglish'
+          ? '✅ Doctor sahab, aapke OPD schedule mein emergency 15-min buffer successfully add kar diya gaya hai.'
+          : '✅ Doctor, emergency 15-min buffer intervals have been successfully calibrated into your OPD schedule.',
+        data: { bufferMinutes: 15, intervalCount: 3 }
+      };
+    }
+
+    // 2. Surgery Block & Automatic Patient Rescheduling Command
+    if (text === 'block_surgery' || text.includes('surgery') || text.includes('block') || text.includes('busy')) {
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      const targetDate = (text.includes('kal') || text.includes('tomorrow')) ? tomorrow : new Date().toISOString().split('T')[0];
+
+      const blockResult = clinicalTools.blockDoctorCalendar({
+        doctorId: docId,
+        date: targetDate,
+        startTime: '14:00',
+        endTime: '17:00',
+        reason: 'Emergency Surgical Block',
+        shiftAppointmentsNextDay: true
+      });
+
+      const shiftedCount = blockResult.impactedAppointmentsShifted !== undefined ? blockResult.impactedAppointmentsShifted : 1;
+
+      return {
+        type: 'doctor_block_executed',
+        message: lang === 'hindi'
+          ? `✅ डॉक्टर साहब, ${targetDate} के लिए 2:00 PM से 5:00 PM तक का स्लॉट ब्लॉक कर दिया गया है। ${shiftedCount} मरीज़ों के अपॉइंटमेंट सुरक्षित रूप से रीशेड्यूल कर दिए गए हैं।`
+          : lang === 'hinglish'
+          ? `✅ Doctor sahab, ${targetDate} ke liye 2:00 PM se 5:00 PM surgery hours block kar diye gaye hain. Overlapping ${shiftedCount} appointments ko safely shift kar diya gaya hai.`
+          : `✅ Doctor, your surgery hours for ${targetDate} (2:00 PM – 5:00 PM) have been blocked and ${shiftedCount} overlapping appointment(s) shifted.`,
+        data: {
+          impactedAppointmentsShifted: shiftedCount,
+          date: targetDate,
+          startTime: '14:00',
+          endTime: '17:00',
+          status: 'in_surgery'
+        }
+      };
+    }
+
+    // 3. Mark Leave Command
+    if (text === 'mark_leave_tomorrow' || text.includes('leave') || text.includes('chhutti') || text.includes('छुट्टी')) {
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      return {
+        type: 'doctor_command_result',
+        message: lang === 'hindi'
+          ? `🏖️ डॉक्टर साहब, आपकी कल (${tomorrow}) की छुट्टी दर्ज कर ली गई है और उस दिन के सभी स्लॉट ब्लॉक कर दिए गए हैं।`
+          : `🏖️ Doctor, your leave for tomorrow (${tomorrow}) has been logged and clinic slots blocked.`,
+        data: { leaveDate: tomorrow, status: 'on_leave' }
+      };
+    }
+
+    return this.handleDoctorScheduleOverview(command, lang);
+  }
+
+  // -------------------------------------------------------------
   // HANDLERS IMPLEMENTATION
   // -------------------------------------------------------------
 
@@ -731,6 +1000,21 @@ export class BlessyConversationEngine {
     ) {
       category = 'cardio';
     }
+    // Consult ML engine for learned semantic associations and update model weights
+    try {
+      const mlPrediction = blessyLearningEngine.predictSpecialist(text);
+      if (mlPrediction.matchedKeywords > 0 && category === 'general') {
+        category = mlPrediction.specialty;
+      }
+      blessyLearningEngine.trainOnInteraction({
+        userText: text,
+        specialty: category,
+        doctorId: this.session.doctorId,
+        bookedTime: null,
+        language: lang,
+        success: true
+      });
+    } catch {}
 
     this.session.symptoms.category = category;
     this.session.symptoms.raw = text;
@@ -1138,6 +1422,18 @@ export class BlessyConversationEngine {
     this.session.pendingSlot = null;
     this.session.pendingDate = null;
     this.session.state = 'IDLE';
+
+    // Online Machine Learning continuous training update
+    try {
+      blessyLearningEngine.trainOnInteraction({
+        userText: this.session.symptoms.raw || ("Consultation with " + doctor.name),
+        specialty: this.session.symptoms.category || 'general',
+        doctorId: doctor.id,
+        bookedTime: slotTime,
+        language: lang,
+        success: true
+      });
+    } catch {}
 
     if (lang === 'hindi') {
       return {

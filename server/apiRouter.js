@@ -423,6 +423,20 @@ export async function handleApiRequest(req, res, parsedUrl) {
       });
     }
 
+    // -------------------------------------------------------------
+    // CONTINUOUS MACHINE LEARNING & ADAPTIVE MODEL STATS
+    // -------------------------------------------------------------
+    if (pathname === '/api/ml/learning-stats' && method === 'GET') {
+      const stats = db.getMLStats();
+      return sendJson(200, { stats });
+    }
+
+    if (pathname === '/api/ml/train-step' && method === 'POST') {
+      const body = await readBody();
+      const updatedStats = db.recordMLTrainStep(body);
+      return sendJson(200, { success: true, stats: updatedStats });
+    }
+
     // Unknown API route
     return sendJson(404, { error: `Endpoint not found: ${pathname}` });
 

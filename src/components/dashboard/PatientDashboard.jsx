@@ -138,43 +138,43 @@ export default function PatientDashboard({ onOpenVoice }) {
 
       {/* Patient Operational Analytics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-4">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Consultations</span>
-          <p className="text-2xl font-bold text-white font-mono mt-1">{analytics?.totalAppointments || appointments.length}</p>
-          <span className="text-[10px] text-slate-500">Persistent database records</span>
+        <div className="rounded-2xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Consultations</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white font-mono mt-1">{analytics?.totalAppointments || appointments.length}</p>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">Persistent database records</span>
         </div>
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-4">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Upcoming Visits</span>
-          <p className="text-2xl font-bold text-brand-tealLight font-mono mt-1">{analytics?.upcomingCount || (nextAppointment ? 1 : 0)}</p>
-          <span className="text-[10px] text-emerald-400 font-semibold">Active digital passes</span>
+        <div className="rounded-2xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Upcoming Visits</span>
+          <p className="text-2xl font-bold text-brand-teal font-mono mt-1">{analytics?.upcomingCount || (nextAppointment ? 1 : 0)}</p>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Active digital passes</span>
         </div>
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-4">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Primary Specialty</span>
-          <p className="text-base font-bold text-white truncate mt-1">{analytics?.topSpecialty || 'Cardiology'}</p>
-          <span className="text-[10px] text-slate-500">Frequent consultation track</span>
+        <div className="rounded-2xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Primary Specialty</span>
+          <p className="text-base font-bold text-slate-900 dark:text-white truncate mt-1">{analytics?.topSpecialty || 'Cardiology'}</p>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">Frequent consultation track</span>
         </div>
-        <div className="rounded-2xl border border-brand-border bg-brand-surface p-4">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Completed Reviews</span>
-          <p className="text-2xl font-bold text-emerald-400 font-mono mt-1">{analytics?.completedCount || 1}</p>
-          <span className="text-[10px] text-slate-500">Documented visit history</span>
+        <div className="rounded-2xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed Reviews</span>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-1">{analytics?.completedCount || 1}</p>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">Documented visit history</span>
         </div>
       </div>
 
       {/* Next Appointment Hero Card */}
       {nextAppointment && (
-        <div className="rounded-3xl border border-brand-teal/40 bg-gradient-to-r from-brand-teal/10 via-brand-surface to-brand-surface p-6 relative overflow-hidden shadow-lg">
+        <div className="rounded-3xl border border-brand-teal/30 bg-gradient-to-r from-teal-500/10 via-white to-white dark:from-brand-teal/10 dark:via-brand-surface dark:to-brand-surface p-6 relative overflow-hidden shadow-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase text-emerald-300">
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-300">
                   {nextAppointment.status}
                 </span>
-                <span className="font-mono text-xs font-bold text-brand-tealLight">#{nextAppointment.id}</span>
+                <span className="font-mono text-xs font-bold text-brand-teal">#{nextAppointment.id}</span>
               </div>
-              <h3 className="text-lg font-bold text-white">{nextAppointment.doctorName}</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{nextAppointment.doctorName}</h3>
               <p className="text-xs text-brand-teal font-medium">{nextAppointment.doctorSpecialty}</p>
               
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-300">
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4 text-brand-teal" />
                   <span>{nextAppointment.date}</span>
@@ -204,7 +204,7 @@ export default function PatientDashboard({ onOpenVoice }) {
                   setRescheduleDate(nextAppointment.date);
                   setRescheduleTime(nextAppointment.time);
                 }}
-                className="text-xs font-semibold text-brand-tealLight hover:underline py-1"
+                className="text-xs font-semibold text-brand-teal hover:underline py-1"
               >
                 Reschedule Visit
               </button>
@@ -215,12 +215,12 @@ export default function PatientDashboard({ onOpenVoice }) {
 
       {/* Stepped Booking Wizard (collapsible / toggleable) */}
       {showWizard && (
-        <div className="rounded-3xl border border-brand-teal/40 bg-brand-surface p-6 shadow-2xl">
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-brand-border">
-            <h3 className="text-base font-bold text-white">4-Step Progressive Booking Wizard</h3>
+        <div className="rounded-3xl border border-brand-teal/40 bg-white dark:bg-brand-surface p-6 shadow-2xl">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-brand-border">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">4-Step Progressive Booking Wizard</h3>
             <button
               onClick={() => setShowWizard(false)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             >
               Close Wizard
             </button>
@@ -233,18 +233,18 @@ export default function PatientDashboard({ onOpenVoice }) {
       )}
 
       {/* Appointment History Tabs (Upcoming, Completed, Rescheduled, Cancelled) */}
-      <div className="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-brand-border gap-4">
+      <div className="rounded-3xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-6 shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-brand-border gap-4">
           <div>
-            <h3 className="text-base font-bold text-white">Consultation Records & History</h3>
-            <p className="text-xs text-slate-400">All historical clinical appointments stored in persistent database.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Consultation Records & History</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">All historical clinical appointments stored in persistent database.</p>
           </div>
 
-          <div className="flex items-center rounded-xl bg-brand-dark p-1 border border-brand-border text-xs">
+          <div className="flex items-center rounded-xl bg-slate-100 dark:bg-brand-dark p-1 border border-slate-200 dark:border-brand-border text-xs">
             <button
               onClick={() => setHistoryTab('upcoming')}
               className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
-                historyTab === 'upcoming' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                historyTab === 'upcoming' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Upcoming
@@ -252,7 +252,7 @@ export default function PatientDashboard({ onOpenVoice }) {
             <button
               onClick={() => setHistoryTab('completed')}
               className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
-                historyTab === 'completed' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                historyTab === 'completed' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Completed
@@ -260,7 +260,7 @@ export default function PatientDashboard({ onOpenVoice }) {
             <button
               onClick={() => setHistoryTab('rescheduled')}
               className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
-                historyTab === 'rescheduled' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                historyTab === 'rescheduled' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Rescheduled
@@ -268,7 +268,7 @@ export default function PatientDashboard({ onOpenVoice }) {
             <button
               onClick={() => setHistoryTab('cancelled')}
               className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
-                historyTab === 'cancelled' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                historyTab === 'cancelled' ? 'bg-brand-teal text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Cancelled
@@ -279,34 +279,34 @@ export default function PatientDashboard({ onOpenVoice }) {
         <div className="mt-5 space-y-3">
           {filteredAppointments.length === 0 ? (
             <p className="py-8 text-center text-xs text-slate-500">
-              No appointments found in the <strong className="text-slate-400">{historyTab}</strong> archive.
+              No appointments found in the <strong className="text-slate-700 dark:text-slate-400">{historyTab}</strong> archive.
             </p>
           ) : (
             filteredAppointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-brand-border bg-brand-dark/50 p-4 hover:border-brand-teal/40 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-brand-border bg-slate-50/70 dark:bg-brand-dark/50 p-4 hover:border-brand-teal/40 transition-colors"
               >
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs font-bold text-brand-tealLight">#{apt.id}</span>
+                    <span className="font-mono text-xs font-bold text-brand-teal">#{apt.id}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                         apt.status === 'confirmed'
-                          ? 'bg-emerald-500/20 text-emerald-300'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300'
                           : apt.status === 'shifted'
-                          ? 'bg-amber-500/20 text-amber-300'
+                          ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300'
                           : apt.status === 'completed'
-                          ? 'bg-slate-700 text-slate-300'
-                          : 'bg-rose-500/20 text-rose-300'
+                          ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                          : 'bg-rose-500/20 text-rose-600 dark:text-rose-300'
                       }`}
                     >
                       {apt.status}
                     </span>
                   </div>
-                  <h4 className="text-sm font-bold text-white">{apt.doctorName}</h4>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{apt.doctorName}</h4>
                   <p className="text-xs text-brand-teal">{apt.doctorSpecialty}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     📅 {apt.date} at {formatTime12(apt.time)} • {apt.room}
                   </p>
                 </div>
@@ -314,7 +314,7 @@ export default function PatientDashboard({ onOpenVoice }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setActivePassApt(apt)}
-                    className="flex items-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-brand-teal hover:text-white transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:border-brand-teal hover:text-brand-teal dark:hover:text-white transition-all cursor-pointer"
                   >
                     <QrCode className="h-3.5 w-3.5 text-brand-teal" />
                     <span>Pass</span>
@@ -328,13 +328,13 @@ export default function PatientDashboard({ onOpenVoice }) {
                           setRescheduleDate(apt.date);
                           setRescheduleTime(apt.time);
                         }}
-                        className="rounded-xl border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-brand-teal hover:text-white transition-all cursor-pointer"
+                        className="rounded-xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:border-brand-teal hover:text-brand-teal dark:hover:text-white transition-all cursor-pointer"
                       >
                         Reschedule
                       </button>
                       <button
                         onClick={() => handleCancelAppointment(apt.id)}
-                        className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
+                        className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -349,11 +349,11 @@ export default function PatientDashboard({ onOpenVoice }) {
 
       {/* Digital Pass Modal */}
       {activePassApt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-brand-dark/85">
-          <div className="relative w-full max-w-sm rounded-3xl border border-brand-teal/40 bg-brand-surface p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/60 dark:bg-brand-dark/85">
+          <div className="relative w-full max-w-sm rounded-3xl border border-brand-teal/40 bg-white dark:bg-brand-surface p-6 text-center shadow-2xl">
             <button
               onClick={() => setActivePassApt(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -361,20 +361,20 @@ export default function PatientDashboard({ onOpenVoice }) {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-teal/20 text-brand-teal mb-3">
               <QrCode className="h-6 w-6" />
             </div>
-            <h4 className="text-base font-bold text-white">Digital Clinic Entry Pass</h4>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white">Digital Clinic Entry Pass</h4>
             <p className="text-xs text-brand-teal font-mono">#{activePassApt.id}</p>
 
-            <div className="my-5 rounded-2xl border border-dashed border-brand-teal/40 bg-brand-dark/70 p-4">
-              <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-xl bg-white p-2">
+            <div className="my-5 rounded-2xl border border-dashed border-brand-teal/40 bg-slate-50 dark:bg-brand-dark/70 p-4">
+              <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-xl bg-white p-2 border border-slate-200">
                 <QrCode className="h-28 w-28 text-slate-900" />
               </div>
-              <p className="mt-3 font-mono text-[11px] text-brand-tealLight font-bold">
+              <p className="mt-3 font-mono text-[11px] text-brand-teal font-bold">
                 {activePassApt.digitalPass?.gateCode || 'GATE-NORTH-101'}
               </p>
               <p className="text-[10px] text-slate-500">Scan at Hospital OPD Kiosk</p>
             </div>
 
-            <div className="space-y-1.5 text-xs text-slate-300 text-left border-t border-brand-border/60 pt-3">
+            <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 text-left border-t border-slate-200 dark:border-brand-border/60 pt-3">
               <p><strong>Patient:</strong> {activePassApt.patientName}</p>
               <p><strong>Specialist:</strong> {activePassApt.doctorName}</p>
               <p><strong>Slot:</strong> {activePassApt.date} at {formatTime12(activePassApt.time)}</p>
@@ -386,37 +386,37 @@ export default function PatientDashboard({ onOpenVoice }) {
 
       {/* Reschedule Modal */}
       {rescheduleApt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-brand-dark/85">
-          <div className="relative w-full max-w-md rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/60 dark:bg-brand-dark/85">
+          <div className="relative w-full max-w-md rounded-3xl border border-slate-200 dark:border-brand-border bg-white dark:bg-brand-surface p-6 shadow-2xl">
             <button
               onClick={() => setRescheduleApt(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <h4 className="text-base font-bold text-white mb-1">Reschedule Consultation</h4>
-            <p className="text-xs text-slate-400 mb-4">#{rescheduleApt.id} with {rescheduleApt.doctorName}</p>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">Reschedule Consultation</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">#{rescheduleApt.id} with {rescheduleApt.doctorName}</p>
 
             <form onSubmit={handleRescheduleSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Select New Date</label>
+                <label className="block text-xs text-slate-600 dark:text-slate-300 mb-1">Select New Date</label>
                 <input
                   type="date"
                   value={rescheduleDate}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setRescheduleDate(e.target.value)}
-                  className="w-full rounded-xl border border-brand-border bg-brand-dark px-3 py-2 text-xs text-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-brand-border bg-slate-50 dark:bg-brand-dark px-3 py-2 text-xs text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Select New Time Slot</label>
+                <label className="block text-xs text-slate-600 dark:text-slate-300 mb-1">Select New Time Slot</label>
                 <select
                   value={rescheduleTime}
                   onChange={(e) => setRescheduleTime(e.target.value)}
-                  className="w-full rounded-xl border border-brand-border bg-brand-dark px-3 py-2 text-xs text-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-brand-border bg-slate-50 dark:bg-brand-dark px-3 py-2 text-xs text-slate-900 dark:text-white"
                 >
                   <option value="09:30">09:30 AM</option>
                   <option value="10:00">10:00 AM</option>
@@ -432,11 +432,11 @@ export default function PatientDashboard({ onOpenVoice }) {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-brand-border/60">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-brand-border/60">
                 <button
                   type="button"
                   onClick={() => setRescheduleApt(null)}
-                  className="rounded-xl border border-brand-border px-3 py-2 text-xs text-slate-300"
+                  className="rounded-xl border border-slate-200 dark:border-brand-border px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-brand-surface"
                 >
                   Cancel
                 </button>

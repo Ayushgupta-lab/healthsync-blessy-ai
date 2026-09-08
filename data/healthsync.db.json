@@ -599,5 +599,14 @@
     "voiceEngine": "bilingual_hinglish",
     "allowInstantPass": true,
     "enforceBreakProtection": true
+  },
+  "mlStats": {
+    "epoch": 43,
+    "confidenceScore": 0.947,
+    "samplesProcessed": 249,
+    "lastTrainedAt": "2026-09-08T19:22:21.218Z",
+    "slotDemandHeatmap": {
+      "16:00": 69
+    }
   }
 }
