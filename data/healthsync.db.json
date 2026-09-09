@@ -49,6 +49,58 @@
       "isOnboarded": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "usr_1788978236381_3c41055a",
+      "email": "dr.friend_1788978236343@healthsync.io",
+      "phone": "+919960148176",
+      "fullName": "Dr. Rahul Verma, MD",
+      "role": "doctor",
+      "salt": "1d00c85efd43702bff3f6a7c79338eb9",
+      "passwordHash": "1ca16a1a571a353fc2c4b9bd502a2e6af9b679bc604e34d7a7ea24caec3466ea2e6f5277a0d77a47c6f853be0f7573fa517eb8b7bb7ed6580ac7b2fc0db02fe4",
+      "isOnboarded": true,
+      "createdAt": "2026-09-09T18:23:56.381Z",
+      "updatedAt": "2026-09-09T18:23:56.389Z",
+      "doctorId": "doc_1788978236381_3c41055a"
+    },
+    {
+      "id": "usr_1788978419858_ca7d5ee3",
+      "email": "dr.friend_1788978419819@healthsync.io",
+      "phone": "+919917196299",
+      "fullName": "Dr. Rahul Verma, MD",
+      "role": "doctor",
+      "salt": "932b0d98f35bda82fada691df484d377",
+      "passwordHash": "7fea77380800a2475fdb0adb9eff1ffc7d462ef21197c58abc9798cea0a53f5202efa3ba2e2f7d6f5ec9d711ebb022926024b46dd19e69d0f7a556027f284556",
+      "isOnboarded": true,
+      "createdAt": "2026-09-09T18:26:59.858Z",
+      "updatedAt": "2026-09-09T18:26:59.877Z",
+      "doctorId": "doc_1788978419858_ca7d5ee3"
+    },
+    {
+      "id": "usr_1788978510582_7f9c945e",
+      "email": "dr.friend_1788978510547@healthsync.io",
+      "phone": "+919983521919",
+      "fullName": "Dr. Rahul Verma, MD",
+      "role": "doctor",
+      "salt": "bbb445238262b1c82fcdb686eb6549af",
+      "passwordHash": "40a8f7925eb89a718c7dd2c70c06a7d479b8c0ea19a1a7b6b3a99ee79bec490462973e3f86f19c0374bbcf0508d90a35a4869af97a68de71a0de58e85062afc0",
+      "isOnboarded": true,
+      "createdAt": "2026-09-09T18:28:30.582Z",
+      "updatedAt": "2026-09-09T18:28:30.591Z",
+      "doctorId": "doc_1788978510582_7f9c945e"
+    },
+    {
+      "id": "usr_1788978510597_9d7c541f",
+      "email": "dr.orphan_1788978510597@test.io",
+      "phone": "+919888606987",
+      "fullName": "Dr. Sandeep Deshmukh",
+      "role": "doctor",
+      "salt": "salt123",
+      "passwordHash": "hash123",
+      "isOnboarded": false,
+      "createdAt": "2026-09-09T18:28:30.597Z",
+      "updatedAt": "2026-09-09T18:28:30.597Z",
+      "doctorId": "doc_1788978510597_9d7c541f"
     }
   ],
   "profiles": [
@@ -113,6 +165,93 @@
         "reschedule",
         "triage_read"
       ]
+    },
+    {
+      "userId": "usr_1788978236381_3c41055a",
+      "role": "doctor",
+      "doctorId": "doc_1788978236381_3c41055a",
+      "name": "Dr. Rahul Verma, MD",
+      "email": "dr.friend_1788978236343@healthsync.io",
+      "phone": "+919960148176",
+      "avatar": "👨‍⚕️",
+      "age": null,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      },
+      "specialty": "Pediatrics & Child Care",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore"
+    },
+    {
+      "userId": "usr_1788978419858_ca7d5ee3",
+      "role": "doctor",
+      "doctorId": "doc_1788978419858_ca7d5ee3",
+      "name": "Dr. Rahul Verma, MD",
+      "email": "dr.friend_1788978419819@healthsync.io",
+      "phone": "+919917196299",
+      "avatar": "👨‍⚕️",
+      "age": null,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      },
+      "specialty": "Pediatrics & Child Care",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore"
+    },
+    {
+      "userId": "usr_1788978510582_7f9c945e",
+      "role": "doctor",
+      "doctorId": "doc_1788978510582_7f9c945e",
+      "name": "Dr. Rahul Verma, MD",
+      "email": "dr.friend_1788978510547@healthsync.io",
+      "phone": "+919983521919",
+      "avatar": "👨‍⚕️",
+      "age": null,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      },
+      "specialty": "Pediatrics & Child Care",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore"
     }
   ],
   "doctors": [
@@ -391,6 +530,255 @@
           }
         ]
       }
+    },
+    {
+      "id": "doc_ananya",
+      "name": "Dr. Ananya Roy, MD",
+      "title": "Senior Consultant Dermatologist & Cosmetologist",
+      "specialty": "Dermatology & Skin Care",
+      "qualification": "MD (Dermatology, Venereology & Leprosy), DNB",
+      "experience": "11+ years",
+      "rating": 4.95,
+      "reviewsCount": 310,
+      "avatar": "👩‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "hospital": "HealthSync Super-Specialty Hospital",
+      "city": "Indore",
+      "registrationNumber": "MCI-IND-2015-62914",
+      "roomNumber": "Suite 105 - Dermatology Wing",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:30",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Off duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Lunch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788978236381_3c41055a",
+      "userId": "usr_1788978236381_3c41055a",
+      "name": "Dr. Rahul Verma, MD",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "Pediatrics & Child Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "registrationNumber": "MCI-IND-2024-12907",
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788978419858_ca7d5ee3",
+      "userId": "usr_1788978419858_ca7d5ee3",
+      "name": "Dr. Rahul Verma, MD",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "Pediatrics & Child Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "registrationNumber": "MCI-IND-2024-25565",
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788978510582_7f9c945e",
+      "userId": "usr_1788978510582_7f9c945e",
+      "name": "Dr. Rahul Verma, MD",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "Pediatrics & Child Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹850 ($90)",
+      "feeAmount": 850,
+      "registrationNumber": "MCI-IND-2024-74822",
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788978510597_9d7c541f",
+      "userId": "usr_1788978510597_9d7c541f",
+      "name": "Dr. Sandeep Deshmukh",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "General Medicine & Clinical Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹700 ($75)",
+      "feeAmount": 700,
+      "registrationNumber": "MCI-IND-2024-25503",
+      "roomNumber": "Suite 116 - OPD Wing",
+      "hospital": "HealthSync Super-Specialty Hospital",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
     }
   ],
   "appointments": [
@@ -478,11 +866,65 @@
       "role": "patient",
       "createdAt": "2026-09-08T19:39:34.457Z",
       "expiresAt": "2026-10-08T19:39:34.457Z"
+    },
+    {
+      "token": "4cb7d63b224cd3fe1ecc736f1e27655f8c98b43ba08e1c1bf4a4d9c8883526ed",
+      "userId": "usr_1788978236381_3c41055a",
+      "role": "doctor",
+      "createdAt": "2026-09-09T18:23:56.384Z",
+      "expiresAt": "2026-09-10T18:23:56.384Z"
+    },
+    {
+      "token": "d9be7865c9c9998c64d948cc9b4d800048ce4f04af3a3102684f4b9c91c3756c",
+      "userId": "usr_1788978419858_ca7d5ee3",
+      "role": "doctor",
+      "createdAt": "2026-09-09T18:26:59.863Z",
+      "expiresAt": "2026-09-10T18:26:59.863Z"
+    },
+    {
+      "token": "95b187e5099da9bc64b386f769477b20b40c77c8986a10ef8f919e57436b9e9f",
+      "userId": "usr_1788978510582_7f9c945e",
+      "role": "doctor",
+      "createdAt": "2026-09-09T18:28:30.586Z",
+      "expiresAt": "2026-09-10T18:28:30.586Z"
     }
   ],
   "passwordResets": [],
   "emergencyReports": [],
   "notifications": [
+    {
+      "id": "notif_1788978510588_50bg",
+      "userId": "usr_1788978510582_7f9c945e",
+      "role": "doctor",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Dr. Rahul Verma. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T18:28:30.588Z",
+      "link": "#profile"
+    },
+    {
+      "id": "notif_1788978419869_5xsp",
+      "userId": "usr_1788978419858_ca7d5ee3",
+      "role": "doctor",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Dr. Rahul Verma. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T18:26:59.869Z",
+      "link": "#profile"
+    },
+    {
+      "id": "notif_1788978236386_iw4p",
+      "userId": "usr_1788978236381_3c41055a",
+      "role": "doctor",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Dr. Rahul Verma. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T18:23:56.386Z",
+      "link": "#profile"
+    },
     {
       "id": "notif_1",
       "userId": "usr_patient_alex",
@@ -538,6 +980,72 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud_1788978510592_pzyc",
+      "actorId": "usr_1788978510582_7f9c945e",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "PROFILE_UPDATED",
+      "resourceType": "profile",
+      "resourceId": "usr_1788978510582_7f9c945e",
+      "details": "Updated user profile & completed onboarding",
+      "timestamp": "2026-09-09T18:28:30.592Z"
+    },
+    {
+      "id": "aud_1788978510587_q89n",
+      "actorId": "usr_1788978510582_7f9c945e",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788978510582_7f9c945e",
+      "details": "Registered account as role 'doctor'",
+      "timestamp": "2026-09-09T18:28:30.587Z"
+    },
+    {
+      "id": "aud_1788978419879_k24p",
+      "actorId": "usr_1788978419858_ca7d5ee3",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "PROFILE_UPDATED",
+      "resourceType": "profile",
+      "resourceId": "usr_1788978419858_ca7d5ee3",
+      "details": "Updated user profile & completed onboarding",
+      "timestamp": "2026-09-09T18:26:59.879Z"
+    },
+    {
+      "id": "aud_1788978419866_dov5",
+      "actorId": "usr_1788978419858_ca7d5ee3",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788978419858_ca7d5ee3",
+      "details": "Registered account as role 'doctor'",
+      "timestamp": "2026-09-09T18:26:59.866Z"
+    },
+    {
+      "id": "aud_1788978236391_fdsb",
+      "actorId": "usr_1788978236381_3c41055a",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "PROFILE_UPDATED",
+      "resourceType": "profile",
+      "resourceId": "usr_1788978236381_3c41055a",
+      "details": "Updated user profile & completed onboarding",
+      "timestamp": "2026-09-09T18:23:56.391Z"
+    },
+    {
+      "id": "aud_1788978236385_uabd",
+      "actorId": "usr_1788978236381_3c41055a",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788978236381_3c41055a",
+      "details": "Registered account as role 'doctor'",
+      "timestamp": "2026-09-09T18:23:56.385Z"
+    },
     {
       "id": "aud_1788896374462_36i2",
       "actorId": "usr_patient_alex",

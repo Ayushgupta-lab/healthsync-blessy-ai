@@ -4,8 +4,9 @@ import { storageService } from '../../services/storageService.js';
 import { clinicalTools } from '../../services/clinicalTools.js';
 import { scheduleEngine, formatTime12 } from '../../services/scheduleEngine.js';
 
-export default function DoctorAdminConsole({ doctors }) {
-  const [selectedDoctorId, setSelectedDoctorId] = useState(doctors[0]?.id || 'doc_akhilesh');
+export default function DoctorAdminConsole({ doctors, currentDoctorId }) {
+  const defaultDoc = (currentDoctorId && doctors.find((d) => d.id === currentDoctorId)) || doctors[0];
+  const [selectedDoctorId, setSelectedDoctorId] = useState(defaultDoc?.id || 'doc_akhilesh');
   const [appointments, setAppointments] = useState([]);
   const [actionSuccessMsg, setActionSuccessMsg] = useState(null);
 
@@ -14,7 +15,7 @@ export default function DoctorAdminConsole({ doctors }) {
   const [surgEnd, setSurgEnd] = useState('16:00');
   const [surgReason, setSurgReason] = useState('Emergency Cardiac Angioplasty (OT-1)');
 
-  const doctor = doctors.find((d) => d.id === selectedDoctorId) || doctors[0];
+  const doctor = doctors.find((d) => d.id === selectedDoctorId) || defaultDoc || doctors[0];
 
   useEffect(() => {
     loadData();

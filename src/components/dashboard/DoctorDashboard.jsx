@@ -90,7 +90,7 @@ export default function DoctorDashboard({ onOpenVoice, onOpenML }) {
 
       {/* Doctor & Clinic Console */}
       {doctors.length > 0 ? (
-        <DoctorAdminConsole doctors={doctors} />
+        <DoctorAdminConsole doctors={doctors} currentDoctorId={user?.doctorId} />
       ) : (
         <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">Loading clinical calendar engine...</div>
       )}

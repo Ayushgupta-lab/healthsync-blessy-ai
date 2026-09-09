@@ -1,6 +1,7 @@
 // Auth Context: Global Reactive State, Session Persistence, RBAC Route Guard & Onboarding State
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from './apiService.js';
+import { storageService } from './storageService.js';
 
 const AuthContext = createContext(null);
 
@@ -12,9 +13,19 @@ export function AuthProvider({ children }) {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [resetFlowData, setResetFlowData] = useState(null); // { identifier, devVerificationCode }
 
-  // Initial Session Restoration on App Mount
+  // Initial Session Restoration & Remote Doctors Sync on App Mount
   useEffect(() => {
     async function restoreSession() {
+      // Synchronize latest doctors from backend for all users (including guests)
+      try {
+        const docRes = await apiService.get('/api/doctors');
+        if (docRes && docRes.doctors) {
+          storageService.syncDoctors(docRes.doctors);
+        }
+      } catch (e) {
+        // Fallback to local storage
+      }
+
       const storedToken = apiService.loadToken();
       if (!storedToken) {
         setIsLoading(false);
@@ -63,6 +74,14 @@ export function AuthProvider({ children }) {
         setUser(res.user);
         setAuthModalOpen(false);
 
+        // Refresh doctors list upon sign in
+        try {
+          const docRes = await apiService.get('/api/doctors');
+          if (docRes && docRes.doctors) {
+            storageService.syncDoctors(docRes.doctors);
+          }
+        } catch (e) {}
+
         if (!res.user.isOnboarded) {
           setIsOnboardingOpen(true);
         }
@@ -82,6 +101,15 @@ export function AuthProvider({ children }) {
         apiService.setToken(res.token);
         setUser(res.user);
         setAuthModalOpen(false);
+
+        // Immediately sync doctors so newly registered doctor appears everywhere
+        try {
+          const docRes = await apiService.get('/api/doctors');
+          if (docRes && docRes.doctors) {
+            storageService.syncDoctors(docRes.doctors);
+          }
+        } catch (e) {}
+
         // Newly registered users always see onboarding
         setIsOnboardingOpen(true);
         return { success: true, user: res.user };

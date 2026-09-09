@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -269,26 +270,85 @@ class HealthSyncDatabase {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf8');
         this.data = JSON.parse(raw);
-        // Ensure any new seed doctors exist in this.data.doctors
-        if (Array.isArray(this.data.doctors)) {
-          let added = false;
-          for (const seedDoc of SEED_DOCTORS) {
-            const exists = this.data.doctors.find(d => d.id === seedDoc.id);
-            if (!exists) {
-              this.data.doctors.push(seedDoc);
-              added = true;
-            }
-          }
-          if (added) {
-            this.saveDatabase();
-          }
-        }
+        this.ensureDoctorRecords();
+        this.syncFromMongoDB();
         return;
       } catch (err) {
         console.error("HealthSync DB file corrupted, rebuilding seed database:", err);
       }
     }
     this.initSeedDatabase();
+    this.ensureDoctorRecords();
+    this.syncFromMongoDB();
+  }
+
+  ensureDoctorRecords() {
+    if (!this.data || !Array.isArray(this.data.users) || !Array.isArray(this.data.doctors)) return;
+    let modified = false;
+
+    // 1. Ensure any seed doctors exist
+    for (const seedDoc of SEED_DOCTORS) {
+      const exists = this.data.doctors.find(d => d.id === seedDoc.id);
+      if (!exists) {
+        this.data.doctors.push(seedDoc);
+        modified = true;
+      }
+    }
+
+    // 2. Self-healing migration: Ensure every registered user with role === 'doctor' has an active doctor profile
+    for (const user of this.data.users) {
+      if (user.role === 'doctor') {
+        const existingDoc = this.data.doctors.find(d => d.userId === user.id || (user.doctorId && d.id === user.doctorId));
+        if (!existingDoc) {
+          const docId = user.doctorId || `doc_${user.id.replace('usr_', '')}`;
+          user.doctorId = docId;
+          const profile = (this.data.profiles || []).find(p => p.userId === user.id) || {};
+          const docName = user.fullName.startsWith('Dr.') ? user.fullName : `Dr. ${user.fullName}`;
+          const newDoc = {
+            id: docId,
+            userId: user.id,
+            name: docName,
+            title: profile.title || `Clinical Consultant & Specialist`,
+            specialty: profile.specialty || "General Medicine & Clinical Care",
+            qualification: profile.qualification || "MBBS, MD",
+            experience: profile.experience || "5+ years",
+            rating: 5.0,
+            reviewsCount: 1,
+            avatar: profile.avatar || "👨‍⚕️",
+            photoUrl: profile.photoUrl || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+            badgeColor: "#0D9488",
+            bio: profile.bio || `Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.`,
+            consultationFee: profile.consultationFee || "₹700 ($75)",
+            feeAmount: profile.feeAmount || 700,
+            registrationNumber: profile.registrationNumber || `MCI-IND-2024-${Math.floor(10000 + Math.random() * 90000)}`,
+            roomNumber: profile.roomNumber || `Suite ${Math.floor(105 + Math.random() * 100)} - OPD Wing`,
+            hospital: profile.hospital || "HealthSync Super-Specialty Hospital",
+            city: profile.city || "Indore",
+            status: "available",
+            statusNote: "Consulting patients in OPD",
+            runningDelayMinutes: 0,
+            activeSurgery: null,
+            leaves: [],
+            routine: {
+              workStart: "09:00",
+              workEnd: "20:00",
+              slotDurationMinutes: 30,
+              bufferMinutes: 5,
+              breaks: [
+                { id: "sleep_hours", name: "Night Sleep", startTime: "21:00", endTime: "09:00", type: "sleep", description: "Doctor off-duty" },
+                { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Doctor lunch break" }
+              ]
+            }
+          };
+          this.data.doctors.push(newDoc);
+          modified = true;
+        }
+      }
+    }
+
+    if (modified) {
+      this.saveDatabase();
+    }
   }
 
   initSeedDatabase() {
@@ -569,10 +629,53 @@ class HealthSyncDatabase {
     try {
       const serialized = JSON.stringify(this.data, null, 2);
       fs.writeFileSync(DB_FILE, serialized, 'utf8');
+      this.syncToMongoDB();
       return true;
     } catch (err) {
       console.error("Error saving HealthSync database:", err);
       return false;
+    }
+  }
+
+  async syncToMongoDB() {
+    try {
+      if (mongoose.connection && mongoose.connection.readyState === 1 && mongoose.connection.db) {
+        await mongoose.connection.db.collection('healthsync_store').updateOne(
+          { _id: 'main_db' },
+          { $set: { data: this.data, updatedAt: new Date() } },
+          { upsert: true }
+        );
+      }
+    } catch (e) {
+      // Non-blocking fallback
+    }
+  }
+
+  async syncFromMongoDB() {
+    try {
+      if (mongoose.connection && mongoose.connection.readyState === 1 && mongoose.connection.db) {
+        const doc = await mongoose.connection.db.collection('healthsync_store').findOne({ _id: 'main_db' });
+        if (doc && doc.data && Array.isArray(doc.data.doctors)) {
+          let modified = false;
+          for (const mDoc of doc.data.doctors) {
+            if (!this.data.doctors.find(d => d.id === mDoc.id)) {
+              this.data.doctors.push(mDoc);
+              modified = true;
+            }
+          }
+          for (const mUser of (doc.data.users || [])) {
+            if (!this.data.users.find(u => u.id === mUser.id || u.email === mUser.email)) {
+              this.data.users.push(mUser);
+              modified = true;
+            }
+          }
+          if (modified) {
+            this.saveDatabase();
+          }
+        }
+      }
+    } catch (e) {
+      // Non-blocking fallback
     }
   }
 
@@ -751,6 +854,25 @@ class HealthSyncDatabase {
 
   getDoctorById(id) {
     return this.data.doctors.find(d => d.id === id) || null;
+  }
+
+  getDoctorByUserId(userId) {
+    return this.data.doctors.find(d => d.userId === userId) || null;
+  }
+
+  createDoctor(doctorObj) {
+    if (!doctorObj.id) {
+      doctorObj.id = `doc_${Date.now().toString(36)}`;
+    }
+    const existingIdx = this.data.doctors.findIndex(d => d.id === doctorObj.id || (doctorObj.userId && d.userId === doctorObj.userId));
+    if (existingIdx !== -1) {
+      this.data.doctors[existingIdx] = { ...this.data.doctors[existingIdx], ...doctorObj };
+      this.saveDatabase();
+      return this.data.doctors[existingIdx];
+    }
+    this.data.doctors.push(doctorObj);
+    this.saveDatabase();
+    return doctorObj;
   }
 
   updateDoctor(id, updates) {

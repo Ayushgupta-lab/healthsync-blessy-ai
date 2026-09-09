@@ -403,6 +403,22 @@ class StorageService {
     this.notify('doctors:changed', doctors);
   }
 
+  syncDoctors(remoteDoctors) {
+    if (!Array.isArray(remoteDoctors) || remoteDoctors.length === 0) return this.getDoctors();
+    const local = this.getDoctors();
+    const merged = [...remoteDoctors];
+
+    // Ensure any local-only seed doctors or updates are retained
+    for (const loc of local) {
+      if (!merged.some(m => m.id === loc.id)) {
+        merged.push(loc);
+      }
+    }
+
+    this.saveDoctors(merged);
+    return merged;
+  }
+
   updateDoctor(id, updates) {
     const doctors = this.getDoctors();
     const idx = doctors.findIndex(d => d.id === id);

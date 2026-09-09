@@ -99,11 +99,58 @@ export const authController = {
       isOnboarded: false
     });
 
+    let doctorId = null;
+    if (assignedRole === 'doctor') {
+      doctorId = `doc_${newUser.id.replace('usr_', '')}`;
+      db.updateUser(newUser.id, { doctorId });
+      newUser.doctorId = doctorId;
+
+      const docName = fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`;
+      const newDoctorRecord = {
+        id: doctorId,
+        userId: newUser.id,
+        name: docName,
+        title: "Clinical Consultant & Specialist",
+        specialty: "General Medicine & Clinical Care",
+        qualification: "MBBS, MD",
+        experience: "5+ years",
+        rating: 5.0,
+        reviewsCount: 1,
+        avatar: "👨‍⚕️",
+        photoUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+        badgeColor: "#0D9488",
+        bio: `Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.`,
+        consultationFee: "₹700 ($75)",
+        feeAmount: 700,
+        registrationNumber: `MCI-IND-2024-${Math.floor(10000 + Math.random() * 90000)}`,
+        roomNumber: `Suite ${Math.floor(105 + Math.random() * 100)} - OPD Wing`,
+        hospital: "HealthSync Super-Specialty Hospital",
+        city: "Indore",
+        status: "available",
+        statusNote: "Consulting patients in OPD",
+        runningDelayMinutes: 0,
+        activeSurgery: null,
+        leaves: [],
+        routine: {
+          workStart: "09:00",
+          workEnd: "20:00",
+          slotDurationMinutes: 30,
+          bufferMinutes: 5,
+          breaks: [
+            { id: "sleep_hours", name: "Night Sleep", startTime: "21:00", endTime: "09:00", type: "sleep", description: "Doctor off-duty" },
+            { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Doctor lunch break" }
+          ]
+        }
+      };
+      db.createDoctor(newDoctorRecord);
+    }
+
     // Create Initial Profile Skeleton
     const initialProfile = {
       userId: newUser.id,
       role: assignedRole,
-      name: newUser.fullName,
+      doctorId: doctorId || undefined,
+      name: assignedRole === 'doctor' ? (fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`) : newUser.fullName,
       email: newUser.email,
       phone: newUser.phone,
       avatar: assignedRole === 'doctor' ? "👨‍⚕️" : "👤",
@@ -343,6 +390,47 @@ export const authController = {
 
     if (profileData.name && profileData.name !== user.fullName) {
       db.updateUser(userId, { fullName: profileData.name });
+    }
+
+    // If user is doctor, sync doctor profile in this.data.doctors
+    if (user.role === 'doctor') {
+      const existingDoc = db.getDoctorByUserId(userId) || (user.doctorId ? db.getDoctorById(user.doctorId) : null);
+      const docUpdates = {};
+      if (profileData.name) docUpdates.name = profileData.name.startsWith('Dr.') ? profileData.name : `Dr. ${profileData.name}`;
+      if (profileData.specialty) docUpdates.specialty = profileData.specialty;
+      if (profileData.title) docUpdates.title = profileData.title;
+      if (profileData.qualification) docUpdates.qualification = profileData.qualification;
+      if (profileData.experience) docUpdates.experience = profileData.experience;
+      if (profileData.consultationFee) docUpdates.consultationFee = profileData.consultationFee;
+      if (profileData.feeAmount) docUpdates.feeAmount = profileData.feeAmount;
+      if (profileData.roomNumber) docUpdates.roomNumber = profileData.roomNumber;
+      if (profileData.bio) docUpdates.bio = profileData.bio;
+      if (profileData.avatar) docUpdates.avatar = profileData.avatar;
+      if (profileData.photoUrl) docUpdates.photoUrl = profileData.photoUrl;
+      if (profileData.hospital) docUpdates.hospital = profileData.hospital;
+      if (profileData.city) docUpdates.city = profileData.city;
+      if (profileData.routine) docUpdates.routine = profileData.routine;
+
+      if (existingDoc) {
+        db.updateDoctor(existingDoc.id, docUpdates);
+      } else {
+        const docId = user.doctorId || `doc_${user.id.replace('usr_', '')}`;
+        db.createDoctor({
+          id: docId,
+          userId: user.id,
+          name: profileData.name ? (profileData.name.startsWith('Dr.') ? profileData.name : `Dr. ${profileData.name}`) : user.fullName,
+          title: profileData.title || "Clinical Consultant & Specialist",
+          specialty: profileData.specialty || "General Medicine & Clinical Care",
+          consultationFee: profileData.consultationFee || "₹700 ($75)",
+          feeAmount: profileData.feeAmount || 700,
+          roomNumber: profileData.roomNumber || "Suite 108 - OPD Wing",
+          hospital: profileData.hospital || "HealthSync Super-Specialty Hospital",
+          city: profileData.city || "Indore",
+          status: "available",
+          statusNote: "Consulting patients in OPD",
+          ...docUpdates
+        });
+      }
     }
 
     // Mark as onboarded if mandatory fields present

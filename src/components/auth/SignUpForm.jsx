@@ -103,13 +103,13 @@ export default function SignUpForm({ onSwitchTab, onSuccess }) {
           <label className="block text-xs font-semibold text-slate-300 mb-1.5">
             Select Your Role
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setRole('patient')}
-              className={`rounded-xl border p-2.5 text-left transition-all ${
+              className={`rounded-xl border p-3 text-left transition-all ${
                 role === 'patient'
-                  ? 'border-brand-teal bg-brand-teal/15 text-white shadow-sm'
+                  ? 'border-brand-teal bg-brand-teal/15 text-white shadow-sm ring-1 ring-brand-teal/30'
                   : 'border-brand-border bg-brand-surface text-slate-400 hover:border-slate-600'
               }`}
             >
@@ -119,26 +119,14 @@ export default function SignUpForm({ onSwitchTab, onSuccess }) {
             <button
               type="button"
               onClick={() => setRole('doctor')}
-              className={`rounded-xl border p-2.5 text-left transition-all ${
+              className={`rounded-xl border p-3 text-left transition-all ${
                 role === 'doctor'
-                  ? 'border-brand-teal bg-brand-teal/15 text-white shadow-sm'
+                  ? 'border-brand-teal bg-brand-teal/15 text-white shadow-sm ring-1 ring-brand-teal/30'
                   : 'border-brand-border bg-brand-surface text-slate-400 hover:border-slate-600'
               }`}
             >
               <span className="block text-xs font-bold text-white">🩺 Doctor</span>
               <span className="block text-[10px] text-slate-400 mt-0.5 leading-tight">Clinical Practice</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('pa')}
-              className={`rounded-xl border p-2.5 text-left transition-all ${
-                role === 'pa'
-                  ? 'border-brand-teal bg-brand-teal/15 text-white shadow-sm'
-                  : 'border-brand-border bg-brand-surface text-slate-400 hover:border-slate-600'
-              }`}
-            >
-              <span className="block text-xs font-bold text-white">📋 Clinic PA</span>
-              <span className="block text-[10px] text-slate-400 mt-0.5 leading-tight">Front-Desk Ops</span>
             </button>
           </div>
         </div>

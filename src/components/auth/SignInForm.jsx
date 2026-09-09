@@ -67,27 +67,20 @@ export default function SignInForm({ onSwitchTab, onSuccess }) {
           </span>
           <span className="text-[10px] text-slate-500 font-mono">1-click fill</span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => fillDemoAccount('patient')}
-            className="rounded-lg border border-brand-border bg-brand-surface px-2 py-1.5 text-[11px] font-medium text-slate-200 hover:border-brand-teal/50 hover:bg-brand-teal/10 hover:text-brand-tealLight transition-all text-center truncate"
+            className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-xs font-medium text-slate-200 hover:border-brand-teal/50 hover:bg-brand-teal/10 hover:text-brand-tealLight transition-all text-center truncate"
           >
             👤 Patient
           </button>
           <button
             type="button"
             onClick={() => fillDemoAccount('doctor')}
-            className="rounded-lg border border-brand-border bg-brand-surface px-2 py-1.5 text-[11px] font-medium text-slate-200 hover:border-brand-teal/50 hover:bg-brand-teal/10 hover:text-brand-tealLight transition-all text-center truncate"
+            className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-xs font-medium text-slate-200 hover:border-brand-teal/50 hover:bg-brand-teal/10 hover:text-brand-tealLight transition-all text-center truncate"
           >
             🩺 Doctor
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemoAccount('pa')}
-            className="rounded-lg border border-brand-border bg-brand-surface px-2 py-1.5 text-[11px] font-medium text-slate-200 hover:border-brand-teal/50 hover:bg-brand-teal/10 hover:text-brand-tealLight transition-all text-center truncate"
-          >
-            📋 Clinic PA
           </button>
         </div>
       </div>
