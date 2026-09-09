@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle2, QrCode, ArrowLeft, Download } from 'lucide-react';
 import { clinicalTools } from '../../services/clinicalTools.js';
+import { apiService } from '../../services/apiService.js';
 
 export default function Step4Confirmation({
   doctor,
@@ -18,29 +19,54 @@ export default function Step4Confirmation({
   const platformFee = 0;
   const totalAmount = feeNumber + platformFee;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      const res = clinicalTools.bookAppointment({
+    try {
+      const payload = {
         doctorId: doctor.id,
+        doctorName: doctor.name,
+        doctorSpecialty: doctor.specialty,
+        room: doctor.roomNumber,
         date: selectedDate,
-        time: selectedSlot.startTime,
-        durationMinutes: selectedDuration,
+        time: selectedSlot?.startTime || '10:00',
+        durationMinutes: selectedDuration || 30,
         patientName: vitals.patientName || 'Alex Morgan',
-        patientPhone: vitals.patientPhone || '+1 (555) 019-2834',
-        patientAge: vitals.patientAge || 29,
+        patientPhone: vitals.patientPhone || '+91 98765 43210',
+        patientAge: parseInt(vitals.patientAge, 10) || 29,
         bloodGroup: vitals.bloodGroup || 'O+',
         symptoms: vitals.symptoms || 'General Clinical Consultation',
         urgency: vitals.painLevel > 6 ? 'urgent' : 'routine',
-        fee: doctor.consultationFee
+        fee: doctor.consultationFee || '₹800'
+      };
+
+      // 1. Post to backend server API (persisting in DB & MongoDB, triggering instant doctor notification)
+      let savedApt = null;
+      try {
+        const apiRes = await apiService.post('/api/appointments', payload);
+        if (apiRes && apiRes.appointment) {
+          savedApt = apiRes.appointment;
+        }
+      } catch (backendErr) {
+        console.warn("Backend appointment booking fallback to local store:", backendErr);
+      }
+
+      // 2. Also register in client-side clinical tools & storageService
+      const clientRes = clinicalTools.bookAppointment({
+        id: savedApt ? savedApt.id : undefined,
+        ...payload
       });
 
-      setIsSubmitting(false);
-      if (res.success) {
-        setConfirmedPass(res.appointment);
-        if (onBookingSuccess) onBookingSuccess(res.appointment);
+      const finalApt = savedApt || clientRes.appointment;
+      setConfirmedPass(finalApt);
+      if (onBookingSuccess) {
+        onBookingSuccess(finalApt);
       }
-    }, 600);
+    } catch (err) {
+      console.error("Booking confirmation error:", err);
+      alert("Failed to confirm appointment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (confirmedPass) {

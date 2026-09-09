@@ -17,7 +17,7 @@
         "avatar": { "type": "string" },
         "photoUrl": { "type": "string" },
         "bio": { "type": "string" },
-        "consultationFee": { "type": "string", "example": "₹800 ($85)" },
+        "consultationFee": { "type": "string", "example": "₹800" },
         "feeAmount": { "type": "number", "example": 800 },
         "roomNumber": { "type": "string" },
         "status": { "type": "string", "enum": ["available", "on_break", "in_consultation", "in_surgery", "off_duty"] },

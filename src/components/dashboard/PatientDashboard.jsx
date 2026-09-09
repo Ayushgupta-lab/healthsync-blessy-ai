@@ -5,6 +5,8 @@ import { apiService } from '../../services/apiService.js';
 import BookingWizard from '../wizard/BookingWizard.jsx';
 import { formatTime12 } from '../../services/scheduleEngine.js';
 
+import { storageService } from '../../services/storageService.js';
+
 export default function PatientDashboard({ onOpenVoice }) {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState(null);
@@ -22,25 +24,47 @@ export default function PatientDashboard({ onOpenVoice }) {
   const loadData = async () => {
     try {
       const [analyticsRes, aptsRes, docsRes] = await Promise.all([
-        apiService.get('/api/analytics'),
-        apiService.get('/api/appointments'),
-        apiService.get('/api/doctors')
+        apiService.get('/api/analytics').catch(() => null),
+        apiService.get('/api/appointments').catch(() => null),
+        apiService.get('/api/doctors').catch(() => null)
       ]);
       if (analyticsRes) setAnalytics(analyticsRes);
-      if (aptsRes && aptsRes.appointments) setAppointments(aptsRes.appointments);
       if (docsRes && docsRes.doctors) setDoctors(docsRes.doctors);
+
+      // Merge backend appointments with local storage appointments
+      const remoteApts = (aptsRes && Array.isArray(aptsRes.appointments)) ? aptsRes.appointments : [];
+      const synced = storageService.syncAppointments(remoteApts);
+
+      // Patient view: show their bookings (or all if unauthenticated/guest)
+      const userApts = (user?.role === 'patient' && user?.id)
+        ? synced.filter(a => a.patientId === user.id || a.patientName === user.fullName || a.patientId === 'usr_guest')
+        : synced;
+
+      setAppointments(userApts.length > 0 ? userApts : synced);
     } catch (err) {
-      console.warn("Failed to load patient dashboard data:", err);
+      console.warn("Failed to load patient dashboard data, using local store:", err);
+      setAppointments(storageService.getAppointments());
     }
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+    const interval = setInterval(loadData, 5000);
+    const unsub = storageService.subscribe('appointments:changed', () => {
+      loadData();
+    });
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
+  }, [user]);
 
   const handleBookingComplete = (apt) => {
     setNotification(`Appointment ${apt.id} booked with ${apt.doctorName}!`);
     setShowWizard(false);
+    if (apt) {
+      storageService.saveAppointment(apt);
+    }
     loadData();
     setTimeout(() => setNotification(null), 5000);
   };
@@ -307,8 +331,13 @@ export default function PatientDashboard({ onOpenVoice }) {
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">{apt.doctorName}</h4>
                   <p className="text-xs text-brand-teal">{apt.doctorSpecialty}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    📅 {apt.date} at {formatTime12(apt.time)} • {apt.room}
+                    📅 {apt.date} at {formatTime12(apt.time)} ({apt.durationMinutes || 30} mins) • {apt.room}
                   </p>
+                  {apt.symptoms && (
+                    <p className="text-[11px] text-slate-400 italic mt-0.5">
+                      Problem: {apt.symptoms}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">

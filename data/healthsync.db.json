@@ -101,6 +101,57 @@
       "createdAt": "2026-09-09T18:28:30.597Z",
       "updatedAt": "2026-09-09T18:28:30.597Z",
       "doctorId": "doc_1788978510597_9d7c541f"
+    },
+    {
+      "id": "usr_1788981357126_7d49e961",
+      "email": "ayush_patient_1788981357087@healthsync.io",
+      "phone": "+91 98765 11111",
+      "fullName": "Ayush Gupta",
+      "role": "patient",
+      "salt": "664751307502b5f248bbad7a9ba45da6",
+      "passwordHash": "f775dbf9e61f68d423cec16445f189a1f4eb5ba6c0b7bda78c38dd4e2b022fb6299bb13bcee94477b57b36fba43a6d5c527041872a6850895ce7159fa6d31b84",
+      "isOnboarded": false,
+      "createdAt": "2026-09-09T19:15:57.126Z",
+      "updatedAt": "2026-09-09T19:15:57.126Z"
+    },
+    {
+      "id": "usr_1788981357169_b251cfdf",
+      "email": "dr_anand_1788981357087@healthsync.io",
+      "phone": "+91 98765 22222",
+      "fullName": "Dr. Anand Gupta",
+      "role": "doctor",
+      "salt": "61c593f69f834f0ec68f6b9a416d067b",
+      "passwordHash": "d47e30f986c7e584ee16fd7899270904e1ef261e7033d326a8e8309ea7ef88cc5ffa50dfa8393355ece1d997c6b9bd32eea0b6cd2ee1ef0b35487a46ddbf1d93",
+      "isOnboarded": false,
+      "createdAt": "2026-09-09T19:15:57.169Z",
+      "updatedAt": "2026-09-09T19:15:57.169Z",
+      "doctorId": "doc_1788981357169_b251cfdf"
+    },
+    {
+      "id": "usr_1788981389773_7c28e91f",
+      "email": "dr.friend_1788981389735@healthsync.io",
+      "phone": "+919973107483",
+      "fullName": "Dr. Rahul Verma, MD",
+      "role": "doctor",
+      "salt": "6412297aea52562ca515579a86ffa0ca",
+      "passwordHash": "b264045923d26e38a56c8d392cb67e481a29c54de5bb2ed9882b81927c516fcee5a12a46e817a90f916af20841be47918b7195d4252c89f5f2d6a9f47bc5c2b6",
+      "isOnboarded": true,
+      "createdAt": "2026-09-09T19:16:29.772Z",
+      "updatedAt": "2026-09-09T19:16:29.785Z",
+      "doctorId": "doc_1788981389773_7c28e91f"
+    },
+    {
+      "id": "usr_1788981389792_7e6462fb",
+      "email": "dr.orphan_1788981389792@test.io",
+      "phone": "+919878076319",
+      "fullName": "Dr. Sandeep Deshmukh",
+      "role": "doctor",
+      "salt": "salt123",
+      "passwordHash": "hash123",
+      "isOnboarded": false,
+      "createdAt": "2026-09-09T19:16:29.792Z",
+      "updatedAt": "2026-09-09T19:16:29.792Z",
+      "doctorId": "doc_1788981389792_7e6462fb"
     }
   ],
   "profiles": [
@@ -142,7 +193,7 @@
       "qualification": "MBBS, MD (Cardiology), FACC",
       "experience": "15+ years",
       "registrationNumber": "MCI-IND-2009-48291",
-      "consultationFee": "₹800 ($85)",
+      "consultationFee": "₹800",
       "availability": "Mon - Sat (08:30 AM - 09:30 PM)",
       "clinicInfo": {
         "hospital": "HealthSync Apex Heart & Diagnostic Institute",
@@ -189,7 +240,7 @@
         "dietary": "Standard"
       },
       "specialty": "Pediatrics & Child Care",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "roomNumber": "Suite 204 - Pediatric OPD",
       "hospital": "HealthSync Superspecialty Hospital Indore",
@@ -218,7 +269,7 @@
         "dietary": "Standard"
       },
       "specialty": "Pediatrics & Child Care",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "roomNumber": "Suite 204 - Pediatric OPD",
       "hospital": "HealthSync Superspecialty Hospital Indore",
@@ -247,7 +298,81 @@
         "dietary": "Standard"
       },
       "specialty": "Pediatrics & Child Care",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
+      "feeAmount": 850,
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore"
+    },
+    {
+      "userId": "usr_1788981357126_7d49e961",
+      "role": "patient",
+      "name": "Ayush Gupta",
+      "email": "ayush_patient_1788981357087@healthsync.io",
+      "phone": "+91 98765 11111",
+      "avatar": "👤",
+      "age": 28,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      }
+    },
+    {
+      "userId": "usr_1788981357169_b251cfdf",
+      "role": "doctor",
+      "doctorId": "doc_1788981357169_b251cfdf",
+      "name": "Dr. Anand Gupta",
+      "email": "dr_anand_1788981357087@healthsync.io",
+      "phone": "+91 98765 22222",
+      "avatar": "👨‍⚕️",
+      "age": null,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      }
+    },
+    {
+      "userId": "usr_1788981389773_7c28e91f",
+      "role": "doctor",
+      "doctorId": "doc_1788981389773_7c28e91f",
+      "name": "Dr. Rahul Verma, MD",
+      "email": "dr.friend_1788981389735@healthsync.io",
+      "phone": "+919973107483",
+      "avatar": "👨‍⚕️",
+      "age": null,
+      "gender": "Not specified",
+      "bloodGroup": "O+",
+      "emergencyContact": {
+        "name": "",
+        "relation": "",
+        "phone": ""
+      },
+      "preferredLanguage": "English",
+      "healthcarePreferences": {
+        "allergies": [],
+        "chronicConditions": [],
+        "dietary": "Standard"
+      },
+      "specialty": "Pediatrics & Child Care",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "roomNumber": "Suite 204 - Pediatric OPD",
       "hospital": "HealthSync Superspecialty Hospital Indore",
@@ -268,7 +393,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Chief Medical Consultant with extensive clinical leadership in cardiovascular medicine, preventive health, and acute outpatient care in Hindi, Hinglish & English.",
-      "consultationFee": "₹800 ($85)",
+      "consultationFee": "₹800",
       "feeAmount": 800,
       "registrationNumber": "MCI-IND-2009-48291",
       "roomNumber": "Suite 101 - Main Clinical Wing",
@@ -348,7 +473,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Specializing in complex diagnostics, multi-system pathology, blood profile analysis, and chronic condition management.",
-      "consultationFee": "₹750 ($80)",
+      "consultationFee": "₹750",
       "feeAmount": 750,
       "registrationNumber": "MCI-IND-2011-38194",
       "roomNumber": "Suite 204 - Diagnostic Wing",
@@ -395,7 +520,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Dedicated specialist for migraine treatment, neurological disorders, cognitive health, stress physiology, and EEG telemetry.",
-      "consultationFee": "₹950 ($100)",
+      "consultationFee": "₹950",
       "feeAmount": 950,
       "registrationNumber": "MCI-IND-2013-88210",
       "roomNumber": "Suite 302 - Neuro Care",
@@ -442,7 +567,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1594824813511-28562d4e38c3?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Senior consultant orthopedic surgeon specializing in knee and leg pain, joint preservation, spine and sports injury recovery, and arthroscopic interventions.",
-      "consultationFee": "₹900 ($95)",
+      "consultationFee": "₹900",
       "feeAmount": 900,
       "registrationNumber": "MCI-IND-2010-44910",
       "roomNumber": "Suite 201 - Bone & Joint Clinic",
@@ -497,7 +622,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Expertise in asthma management, COPD, post-viral pulmonary recovery, and comprehensive sleep apnea analysis.",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "registrationNumber": "MCI-IND-2012-74819",
       "roomNumber": "Suite 108 - Respiratory Wing",
@@ -544,7 +669,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "hospital": "HealthSync Super-Specialty Hospital",
       "city": "Indore",
@@ -594,7 +719,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "registrationNumber": "MCI-IND-2024-12907",
       "roomNumber": "Suite 204 - Pediatric OPD",
@@ -644,7 +769,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "registrationNumber": "MCI-IND-2024-25565",
       "roomNumber": "Suite 204 - Pediatric OPD",
@@ -694,7 +819,7 @@
       "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
-      "consultationFee": "₹850 ($90)",
+      "consultationFee": "₹850",
       "feeAmount": 850,
       "registrationNumber": "MCI-IND-2024-74822",
       "roomNumber": "Suite 204 - Pediatric OPD",
@@ -744,10 +869,160 @@
       "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
       "badgeColor": "#0D9488",
       "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
-      "consultationFee": "₹700 ($75)",
+      "consultationFee": "₹700",
       "feeAmount": 700,
       "registrationNumber": "MCI-IND-2024-25503",
       "roomNumber": "Suite 116 - OPD Wing",
+      "hospital": "HealthSync Super-Specialty Hospital",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788981357169_b251cfdf",
+      "userId": "usr_1788981357169_b251cfdf",
+      "name": "Dr. Anand Gupta",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "General Medicine & Clinical Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹700",
+      "feeAmount": 700,
+      "registrationNumber": "MCI-IND-2024-91642",
+      "roomNumber": "Suite 127 - OPD Wing",
+      "hospital": "HealthSync Super-Specialty Hospital",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788981389773_7c28e91f",
+      "userId": "usr_1788981389773_7c28e91f",
+      "name": "Dr. Rahul Verma, MD",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "Pediatrics & Child Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹850",
+      "feeAmount": 850,
+      "registrationNumber": "MCI-IND-2024-74818",
+      "roomNumber": "Suite 204 - Pediatric OPD",
+      "hospital": "HealthSync Superspecialty Hospital Indore",
+      "city": "Indore",
+      "status": "available",
+      "statusNote": "Consulting patients in OPD",
+      "runningDelayMinutes": 0,
+      "activeSurgery": null,
+      "leaves": [],
+      "routine": {
+        "workStart": "09:00",
+        "workEnd": "20:00",
+        "slotDurationMinutes": 30,
+        "bufferMinutes": 5,
+        "breaks": [
+          {
+            "id": "sleep_hours",
+            "name": "Night Sleep",
+            "startTime": "21:00",
+            "endTime": "09:00",
+            "type": "sleep",
+            "description": "Doctor off-duty"
+          },
+          {
+            "id": "lunch_break",
+            "name": "Lunch Break",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "type": "lunch",
+            "description": "Doctor lunch break"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doc_1788981389792_7e6462fb",
+      "userId": "usr_1788981389792_7e6462fb",
+      "name": "Dr. Sandeep Deshmukh",
+      "title": "Clinical Consultant & Specialist",
+      "specialty": "General Medicine & Clinical Care",
+      "qualification": "MBBS, MD",
+      "experience": "5+ years",
+      "rating": 5,
+      "reviewsCount": 1,
+      "avatar": "👨‍⚕️",
+      "photoUrl": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
+      "badgeColor": "#0D9488",
+      "bio": "Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.",
+      "consultationFee": "₹700",
+      "feeAmount": 700,
+      "registrationNumber": "MCI-IND-2024-24419",
+      "roomNumber": "Suite 202 - OPD Wing",
       "hospital": "HealthSync Super-Specialty Hospital",
       "city": "Indore",
       "status": "available",
@@ -783,6 +1058,82 @@
   ],
   "appointments": [
     {
+      "id": "BSY-91246",
+      "patientId": "usr_patient_2",
+      "patientName": "Rohan Verma",
+      "patientPhone": "+91 98765 33333",
+      "patientAge": 40,
+      "bloodGroup": "O+",
+      "doctorId": "doc_1788981357169_b251cfdf",
+      "doctorName": "Dr. Anand Gupta",
+      "doctorSpecialty": "General Medicine & Clinical Care",
+      "date": "2026-09-10",
+      "time": "14:30",
+      "durationMinutes": 30,
+      "room": "Suite 101 - Main Clinical Wing",
+      "symptoms": "Routine diabetes checkup and HbA1c review",
+      "urgency": "routine",
+      "status": "confirmed",
+      "fee": "₹700",
+      "digitalPass": {
+        "passId": "DPS-BSY-91246",
+        "qrHash": "HS-VERIFIED-BSY-91246-1788981357177",
+        "issuedAt": "2026-09-09T19:15:57.177Z",
+        "gateCode": "GATE-NORTH-101"
+      },
+      "history": [
+        {
+          "action": "created",
+          "by": "usr_patient_2",
+          "timestamp": "2026-09-09T19:15:57.177Z",
+          "notes": "Appointment booked"
+        }
+      ],
+      "createdAt": "2026-09-09T19:15:57.177Z",
+      "updatedAt": "2026-09-09T19:15:57.177Z"
+    },
+    {
+      "id": "BSY-18003",
+      "patientId": "usr_1788981357126_7d49e961",
+      "patientName": "Ayush Gupta",
+      "patientPhone": "+91 98765 11111",
+      "patientAge": 26,
+      "bloodGroup": "O+",
+      "doctorId": "doc_1788981357169_b251cfdf",
+      "doctorName": "Dr. Anand Gupta",
+      "doctorSpecialty": "General Medicine & Clinical Care",
+      "date": "2026-09-10",
+      "time": "11:00",
+      "durationMinutes": 30,
+      "room": "Suite 127 - OPD Wing",
+      "symptoms": "Throbbing migraine and visual aura for past 2 days",
+      "urgency": "routine",
+      "status": "completed",
+      "fee": "₹700",
+      "digitalPass": {
+        "passId": "DPS-BSY-18003",
+        "qrHash": "HS-VERIFIED-BSY-18003-1788981357175",
+        "issuedAt": "2026-09-09T19:15:57.175Z",
+        "gateCode": "GATE-NORTH-101"
+      },
+      "history": [
+        {
+          "action": "created",
+          "by": "usr_1788981357126_7d49e961",
+          "timestamp": "2026-09-09T19:15:57.175Z",
+          "notes": "Appointment booked"
+        },
+        {
+          "action": "completed",
+          "by": "Dr. Anand Gupta",
+          "timestamp": "2026-09-09T19:15:57.179Z",
+          "notes": "Status changed to completed"
+        }
+      ],
+      "createdAt": "2026-09-09T19:15:57.175Z",
+      "updatedAt": "2026-09-09T19:15:57.179Z"
+    },
+    {
       "id": "BSY-10284",
       "patientId": "usr_patient_alex",
       "patientName": "Alex Morgan",
@@ -799,7 +1150,7 @@
       "symptoms": "Mild migraine aura, occasional dizziness, blood pressure review",
       "urgency": "routine",
       "status": "confirmed",
-      "fee": "₹800 ($85)",
+      "fee": "₹800",
       "digitalPass": {
         "passId": "DPS-10284-AX",
         "qrHash": "HS-BSY-10284-VERIFIED-HASH",
@@ -840,7 +1191,7 @@
       "symptoms": "Annual cardiovascular routine assessment & lipid profile review",
       "urgency": "routine",
       "status": "completed",
-      "fee": "₹800 ($85)",
+      "fee": "₹800",
       "digitalPass": {
         "passId": "DPS-10190-CMP",
         "qrHash": "HS-BSY-10190-ARCHIVED",
@@ -887,11 +1238,80 @@
       "role": "doctor",
       "createdAt": "2026-09-09T18:28:30.586Z",
       "expiresAt": "2026-09-10T18:28:30.586Z"
+    },
+    {
+      "token": "2dd790f7a99c95c8b584835819bd4166154fef5045022e55823b638b50f4734a",
+      "userId": "usr_1788981357126_7d49e961",
+      "role": "patient",
+      "createdAt": "2026-09-09T19:15:57.129Z",
+      "expiresAt": "2026-09-10T19:15:57.129Z"
+    },
+    {
+      "token": "fa26823fb89395813e036592cf977714105d7b3634caef0dcc8397df49f1013c",
+      "userId": "usr_1788981357169_b251cfdf",
+      "role": "doctor",
+      "createdAt": "2026-09-09T19:15:57.172Z",
+      "expiresAt": "2026-09-10T19:15:57.172Z"
+    },
+    {
+      "token": "daf875218882ab5137ab037bd7a8f98f83038285fa1f16a9b7ca6736264d0054",
+      "userId": "usr_1788981389773_7c28e91f",
+      "role": "doctor",
+      "createdAt": "2026-09-09T19:16:29.777Z",
+      "expiresAt": "2026-09-10T19:16:29.777Z"
     }
   ],
   "passwordResets": [],
   "emergencyReports": [],
   "notifications": [
+    {
+      "id": "notif_1788981389781_svvv",
+      "userId": "usr_1788981389773_7c28e91f",
+      "doctorId": null,
+      "role": "doctor",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Dr. Rahul Verma. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T19:16:29.781Z",
+      "link": "#profile"
+    },
+    {
+      "id": "notif_1788981357176_qvo6",
+      "userId": "usr_1788981357169_b251cfdf",
+      "doctorId": "doc_1788981357169_b251cfdf",
+      "role": "doctor",
+      "title": "New Patient Appointment 📅 (#BSY-18003)",
+      "message": "Ayush Gupta has booked an appointment for 2026-09-10 at 11:00 (30 mins). Problem: Throbbing migraine and visual aura for past 2 days.",
+      "type": "appointment",
+      "read": false,
+      "createdAt": "2026-09-09T19:15:57.176Z",
+      "link": "#doctor-console"
+    },
+    {
+      "id": "notif_1788981357174_zvja",
+      "userId": "usr_1788981357169_b251cfdf",
+      "doctorId": null,
+      "role": "doctor",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Dr. Anand Gupta. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T19:15:57.174Z",
+      "link": "#profile"
+    },
+    {
+      "id": "notif_1788981357131_o0b6",
+      "userId": "usr_1788981357126_7d49e961",
+      "doctorId": null,
+      "role": "patient",
+      "title": "Welcome to HealthSync!",
+      "message": "Namaste, Ayush Gupta. Complete your profile onboarding to begin clinical consultations.",
+      "type": "system",
+      "read": false,
+      "createdAt": "2026-09-09T19:15:57.131Z",
+      "link": "#profile"
+    },
     {
       "id": "notif_1788978510588_50bg",
       "userId": "usr_1788978510582_7f9c945e",
@@ -980,6 +1400,50 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud_1788981389786_us8s",
+      "actorId": "usr_1788981389773_7c28e91f",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "PROFILE_UPDATED",
+      "resourceType": "profile",
+      "resourceId": "usr_1788981389773_7c28e91f",
+      "details": "Updated user profile & completed onboarding",
+      "timestamp": "2026-09-09T19:16:29.786Z"
+    },
+    {
+      "id": "aud_1788981389780_kozj",
+      "actorId": "usr_1788981389773_7c28e91f",
+      "actorRole": "doctor",
+      "actorName": "Dr. Rahul Verma",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788981389773_7c28e91f",
+      "details": "Registered account as role 'doctor'",
+      "timestamp": "2026-09-09T19:16:29.780Z"
+    },
+    {
+      "id": "aud_1788981357173_5a3q",
+      "actorId": "usr_1788981357169_b251cfdf",
+      "actorRole": "doctor",
+      "actorName": "Dr. Anand Gupta",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788981357169_b251cfdf",
+      "details": "Registered account as role 'doctor'",
+      "timestamp": "2026-09-09T19:15:57.173Z"
+    },
+    {
+      "id": "aud_1788981357131_p5ko",
+      "actorId": "usr_1788981357126_7d49e961",
+      "actorRole": "patient",
+      "actorName": "Ayush Gupta",
+      "action": "USER_REGISTERED",
+      "resourceType": "user",
+      "resourceId": "usr_1788981357126_7d49e961",
+      "details": "Registered account as role 'patient'",
+      "timestamp": "2026-09-09T19:15:57.131Z"
+    },
     {
       "id": "aud_1788978510592_pzyc",
       "actorId": "usr_1788978510582_7f9c945e",

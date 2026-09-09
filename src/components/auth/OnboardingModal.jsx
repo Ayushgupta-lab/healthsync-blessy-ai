@@ -19,7 +19,7 @@ export default function OnboardingModal({ isOpen, onClose }) {
   const [specialty, setSpecialty] = useState(profile?.specialty || 'General Medicine & Cardiology');
   const [qualification, setQualification] = useState(profile?.qualification || 'MBBS, MD');
   const [experience, setExperience] = useState(profile?.experience || '10+ years');
-  const [consultationFee, setConsultationFee] = useState(profile?.consultationFee || '₹800 ($85)');
+  const [consultationFee, setConsultationFee] = useState(profile?.consultationFee || '₹800');
   const [room, setRoom] = useState(profile?.clinicInfo?.room || 'Suite 101 - Main Clinical Wing');
 
   // PA profile state

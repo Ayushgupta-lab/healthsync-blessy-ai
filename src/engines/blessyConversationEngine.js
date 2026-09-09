@@ -958,7 +958,7 @@ export class BlessyConversationEngine {
     if (lang === 'hinglish') {
       const doctorCards = doctors.map((doc, idx) => {
         const statusBadge = doc.status === 'available' ? '🟢 Available' : (doc.statusNote || 'In OPD');
-        return `${idx + 1}. **${doc.name}** — ${doc.specialty}\n   • **Experience**: ${doc.experience || '10+ yrs'} | **Rating**: ⭐ ${doc.rating || '4.9'}\n   • **Fee**: ${doc.consultationFee || '₹800 ($85)'} | **Room**: ${doc.roomNumber || 'Suite 101'}\n   • **Status**: ${statusBadge}`;
+        return `${idx + 1}. **${doc.name}** — ${doc.specialty}\n   • **Experience**: ${doc.experience || '10+ yrs'} | **Rating**: ⭐ ${doc.rating || '4.9'}\n   • **Fee**: ${doc.consultationFee || '₹800'} | **Room**: ${doc.roomNumber || 'Suite 101'}\n   • **Status**: ${statusBadge}`;
       }).join('\n\n');
 
       return {
@@ -974,7 +974,7 @@ export class BlessyConversationEngine {
 
     const doctorCards = doctors.map((doc, idx) => {
       const statusBadge = doc.status === 'available' ? '🟢 Available' : (doc.statusNote || 'In OPD');
-      return `${idx + 1}. **${doc.name}** — ${doc.specialty}\n   • **Experience**: ${doc.experience || '10+ yrs'} | **Rating**: ⭐ ${doc.rating || '4.9'}\n   • **Fee**: ${doc.consultationFee || '₹800 ($85)'} | **Room**: ${doc.roomNumber || 'Suite 101'}\n   • **Status**: ${statusBadge}`;
+      return `${idx + 1}. **${doc.name}** — ${doc.specialty}\n   • **Experience**: ${doc.experience || '10+ yrs'} | **Rating**: ⭐ ${doc.rating || '4.9'}\n   • **Fee**: ${doc.consultationFee || '₹800'} | **Room**: ${doc.roomNumber || 'Suite 101'}\n   • **Status**: ${statusBadge}`;
     }).join('\n\n');
 
     return {
@@ -1417,14 +1417,14 @@ export class BlessyConversationEngine {
     let recommendedDoctorId = "doc_akhilesh";
     let specialistName = "Dr. Akhilesh Sharma, MD";
     let specialtyTitle = "Chief Clinical Consultant & Cardiologist (Suite 101)";
-    let feeText = "₹800 ($85)";
+    let feeText = "₹800";
 
     if (category === 'skin') {
       conditionName = lang === 'hindi' ? "त्वचा एवं एलर्जी परामर्श" : "Dermatology & Skin Care";
       recommendedDoctorId = "doc_ananya";
       specialistName = "Dr. Ananya Roy, MD";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ त्वचा विशेषज्ञ (Suite 105)" : "Senior Consultant Dermatologist & Skin Specialist (Suite 105)";
-      feeText = "₹850 ($90)";
+      feeText = "₹850";
       advice = lang === 'hindi'
         ? "• प्रभावित त्वचा को साफ और सूखा रखें।\n• किसी भी कठोर साबुन या केमिकल से बचें और त्वचा को नोचें या खुजलाएं नहीं।"
         : lang === 'hinglish'
@@ -1435,7 +1435,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_vance";
       specialistName = "Dr. Marcus Vance, MD";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ डायग्नोस्टिशियन एवं फिजिशियन (Suite 204)" : "Senior Diagnostician & Internist (Suite 204)";
-      feeText = "₹750 ($80)";
+      feeText = "₹750";
       advice = lang === 'hindi'
         ? "• हल्का और सुपाच्य भोजन लें, मसालेदार व तले हुए खाने से बचें।\n• पर्याप्त मात्रा में गुनगुना पानी या ओआरएस पिएं।"
         : lang === 'hinglish'
@@ -1446,7 +1446,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_patel";
       specialistName = "Dr. Rajesh Patel, MS";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ हड्डी एवं जोड़ विशेषज्ञ (Suite 201)" : "Senior Orthopedic & Joint Specialist (Suite 201)";
-      feeText = "₹900 ($95)";
+      feeText = "₹900";
       advice = lang === 'hindi'
         ? "• पैर पर अधिक भार न डालें, लेटते समय पैर को थोड़ा ऊंचा रखें।\n• दर्द या सूजन वाले हिस्से पर 15-20 मिनट बर्फ की सिकाई करें।"
         : lang === 'hinglish'
@@ -1457,7 +1457,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_priya";
       specialistName = "Dr. Priya Sharma, MD";
       specialtyTitle = lang === 'hindi' ? "न्यूरोलॉजिस्ट (Suite 302)" : "Consultant Neurologist (Suite 302)";
-      feeText = "₹950 ($100)";
+      feeText = "₹950";
       advice = lang === 'hindi'
         ? "• शांत, हल्के अंधेरे कमरे में आराम करें और भरपूर पानी पिएं।\n• माथे और गर्दन पर ठंडी पट्टी लगाएं।"
         : lang === 'hinglish'
@@ -1468,7 +1468,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_khan";
       specialistName = "Dr. Sameer Khan, MD";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ पल्मोनोलॉजिस्ट (Suite 108)" : "Senior Pulmonologist (Suite 108)";
-      feeText = "₹850 ($90)";
+      feeText = "₹850";
       advice = lang === 'hindi'
         ? "• दिन में दो बार गुनगुने पानी की भाप लें।\n• गुनगुना पानी और काढ़ा पिएं, ठंडी चीजों से परहेज करें।"
         : lang === 'hinglish'
@@ -1479,7 +1479,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_vance";
       specialistName = "Dr. Marcus Vance, MD";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ डायग्नोस्टिशियन (Suite 204)" : "Senior Diagnostician & Internist (Suite 204)";
-      feeText = "₹750 ($80)";
+      feeText = "₹750";
       advice = lang === 'hindi'
         ? "• ओआरएस, गुनगुना पानी और सूप पिएं।\n• सामान्य पानी की पट्टी माथे पर रखें।"
         : lang === 'hinglish'
@@ -1490,7 +1490,7 @@ export class BlessyConversationEngine {
       recommendedDoctorId = "doc_akhilesh";
       specialistName = "Dr. Akhilesh Sharma, MD";
       specialtyTitle = lang === 'hindi' ? "प्रमुख क्लिनिकल कंसल्टेंट (Suite 101)" : "Chief Medical Consultant (Suite 101)";
-      feeText = "₹800 ($85)";
+      feeText = "₹800";
       advice = lang === 'hindi'
         ? "• पर्याप्त विश्राम करें और खुद को हाइड्रेटेड रखें।"
         : lang === 'hinglish'
@@ -1840,7 +1840,7 @@ export class BlessyConversationEngine {
       type: 'booking_confirmed',
       toolCalled: 'bookAppointment',
       data: booking.appointment,
-      message: `🎉 **Appointment Confirmed!**\n\n• **Booking ID**: \`${booking.appointment.id}\`\n• **Specialist**: ${booking.appointment.doctorName}\n• **Date & Time**: ${slotDate} at ${formatTime12(slotTime)}\n• **Clinic Room**: ${booking.appointment.room}\n• **Consultation Fee**: ${doctor.consultationFee || '₹800 ($85)'}\n• **Patient**: ${booking.appointment.patientName}\n\n✅ Your digital verification pass is generated and saved to records.`,
+      message: `🎉 **Appointment Confirmed!**\n\n• **Booking ID**: \`${booking.appointment.id}\`\n• **Specialist**: ${booking.appointment.doctorName}\n• **Date & Time**: ${slotDate} at ${formatTime12(slotTime)}\n• **Clinic Room**: ${booking.appointment.room}\n• **Consultation Fee**: ${doctor.consultationFee || '₹800'}\n• **Patient**: ${booking.appointment.patientName}\n\n✅ Your digital verification pass is generated and saved to records.`,
       actionChips: [
         { label: '📋 View Digital Pass', action: `view_pass_${booking.appointment.id}` },
         { label: '📅 Book Another Appointment', action: 'book_appointment' },

@@ -19,7 +19,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Chief Medical Consultant with extensive clinical leadership in cardiovascular medicine, preventive health, and acute outpatient care in Hindi, Hinglish & English.",
-    consultationFee: "₹800 ($85)",
+    consultationFee: "₹800",
     feeAmount: 800,
     roomNumber: "Suite 101 - Main Clinical Wing",
     status: "available",
@@ -97,7 +97,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Specializing in complex diagnostics, multi-system pathology, blood profile analysis, and chronic condition management.",
-    consultationFee: "₹750 ($80)",
+    consultationFee: "₹750",
     feeAmount: 750,
     roomNumber: "Suite 204 - Diagnostic Wing",
     status: "available",
@@ -128,7 +128,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Dedicated specialist for migraine treatment, neurological disorders, cognitive health, stress physiology, and EEG telemetry.",
-    consultationFee: "₹950 ($100)",
+    consultationFee: "₹950",
     feeAmount: 950,
     roomNumber: "Suite 302 - Neuro Care",
     status: "available",
@@ -159,7 +159,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Senior consultant orthopedic surgeon specializing in knee and leg pain, joint preservation, spine and sports injury recovery, and arthroscopic interventions.",
-    consultationFee: "₹900 ($95)",
+    consultationFee: "₹900",
     feeAmount: 900,
     roomNumber: "Suite 201 - Bone & Joint Clinic",
     status: "available",
@@ -191,7 +191,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Expertise in chronic cough, asthma management, respiratory allergies, and comprehensive pulmonary rehabilitation.",
-    consultationFee: "₹850 ($90)",
+    consultationFee: "₹850",
     feeAmount: 850,
     roomNumber: "Suite 108 - Respiratory Wing",
     status: "available",
@@ -222,7 +222,7 @@ export const DEFAULT_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
-    consultationFee: "₹850 ($90)",
+    consultationFee: "₹850",
     feeAmount: 850,
     hospital: "HealthSync Super-Specialty Hospital",
     city: "Indore",
@@ -289,7 +289,7 @@ export const INITIAL_APPOINTMENTS = [
     symptoms: "Mild migraine aura, occasional dizziness, blood pressure review",
     urgency: "routine",
     status: "confirmed",
-    fee: "₹800 ($85)",
+    fee: "₹800",
     createdAt: new Date().toISOString()
   },
   {
@@ -308,7 +308,7 @@ export const INITIAL_APPOINTMENTS = [
     symptoms: "Hypertension review, ECG checkup",
     urgency: "moderate",
     status: "confirmed",
-    fee: "₹800 ($85)",
+    fee: "₹800",
     createdAt: new Date().toISOString()
   }
 ];
@@ -441,6 +441,31 @@ class StorageService {
 
   getAppointmentsByDoctor(doctorId) {
     return this.getAppointments().filter(a => a.doctorId === doctorId);
+  }
+
+  syncAppointments(remoteAppointments) {
+    if (!Array.isArray(remoteAppointments)) return this.getAppointments();
+    const local = this.getAppointments();
+    const mergedMap = new Map();
+
+    for (const r of remoteAppointments) {
+      if (r && r.id) mergedMap.set(r.id, r);
+    }
+    for (const l of local) {
+      if (l && l.id && !mergedMap.has(l.id)) {
+        mergedMap.set(l.id, l);
+      }
+    }
+
+    const merged = Array.from(mergedMap.values()).sort((a, b) => {
+      const timeA = new Date(`${a.date}T${a.time || '00:00'}`).getTime();
+      const timeB = new Date(`${b.date}T${b.time || '00:00'}`).getTime();
+      return timeB - timeA;
+    });
+
+    safeStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(merged));
+    this.notify('appointments:changed', merged);
+    return merged;
   }
 
   saveAppointment(aptData) {

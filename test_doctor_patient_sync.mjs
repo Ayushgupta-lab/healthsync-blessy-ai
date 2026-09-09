@@ -76,7 +76,7 @@ console.log('\n👉 TEST 3: Doctor Profile Onboarding Updates Sync to db.doctors
 const updateResult = authController.updateProfile(newDoctorUser.id, {
   name: "Dr. Rahul Verma, MD",
   specialty: "Pediatrics & Child Care",
-  consultationFee: "₹850 ($90)",
+  consultationFee: "₹850",
   feeAmount: 850,
   roomNumber: "Suite 204 - Pediatric OPD",
   hospital: "HealthSync Superspecialty Hospital Indore",
@@ -86,7 +86,7 @@ const updateResult = authController.updateProfile(newDoctorUser.id, {
 assert(updateResult.status === 200, 'Profile update succeeded with status 200');
 const updatedDocRecord = db.getDoctorById(newDoctorUser.doctorId);
 assert(updatedDocRecord.specialty === 'Pediatrics & Child Care', 'Specialty synced to db.doctors: Pediatrics & Child Care');
-assert(updatedDocRecord.consultationFee === '₹850 ($90)', 'Consultation fee synced to db.doctors: ₹850 ($90)');
+assert(updatedDocRecord.consultationFee === '₹850', 'Consultation fee synced to db.doctors: ₹850');
 assert(updatedDocRecord.roomNumber === 'Suite 204 - Pediatric OPD', 'Room number synced to db.doctors');
 assert(updatedDocRecord.city === 'Indore', 'City synced to db.doctors: Indore');
 

@@ -148,13 +148,18 @@ export async function handleApiRequest(req, res, parsedUrl) {
 
       if (method === 'GET') {
         let filter = {};
-        // RBAC: Patient only sees their own appointments
-        if (auth.user.role === 'patient') {
+        const requestedDoctorId = parsedUrl.searchParams.get('doctorId');
+
+        if (requestedDoctorId) {
+          filter.doctorId = requestedDoctorId;
+        } else if (auth.user.role === 'patient') {
+          // RBAC: Patient only sees their own appointments
           filter.patientId = auth.user.id;
         } else if (auth.user.role === 'doctor') {
-          filter.doctorId = auth.user.doctorId || 'doc_akhilesh';
+          const doc = db.getDoctorByUserId(auth.user.id) || (auth.user.doctorId ? db.getDoctorById(auth.user.doctorId) : null);
+          filter.doctorId = doc ? doc.id : (auth.user.doctorId || 'doc_akhilesh');
         }
-        // PA and Admin see all clinic appointments
+        // PA and Admin see all clinic appointments if no explicit doctorId
 
         const statusQuery = parsedUrl.searchParams.get('status');
         if (statusQuery && statusQuery !== 'all') {
@@ -172,14 +177,22 @@ export async function handleApiRequest(req, res, parsedUrl) {
         }
 
         const doctor = db.getDoctorById(body.doctorId);
+        const durationMins = parseInt(body.durationMinutes, 10) || 30;
+        const patientName = body.patientName || auth.user.fullName || "Alex Morgan";
+        const patientPhone = body.patientPhone || auth.user.phone || "+91 98765 43210";
+        const symptoms = body.symptoms || "General Clinical Consultation";
+
         const newApt = db.createAppointment({
           ...body,
+          durationMinutes: durationMins,
           patientId: auth.user.role === 'patient' ? auth.user.id : (body.patientId || auth.user.id),
-          patientName: body.patientName || auth.user.fullName,
-          patientPhone: body.patientPhone || auth.user.phone,
-          doctorName: doctor ? doctor.name : body.doctorName,
-          doctorSpecialty: doctor ? doctor.specialty : body.doctorSpecialty,
-          room: doctor ? doctor.roomNumber : "Suite 101"
+          patientName,
+          patientPhone,
+          doctorName: doctor ? doctor.name : (body.doctorName || "Dr. Specialist"),
+          doctorSpecialty: doctor ? doctor.specialty : (body.doctorSpecialty || "General Medicine"),
+          room: doctor ? doctor.roomNumber : (body.room || "Suite 101 - Main Clinical Wing"),
+          symptoms,
+          fee: doctor ? doctor.consultationFee : (body.fee || "₹800")
         });
 
         // Audit & Notification
@@ -190,14 +203,29 @@ export async function handleApiRequest(req, res, parsedUrl) {
           action: "APPOINTMENT_CREATED",
           resourceType: "appointment",
           resourceId: newApt.id,
-          details: `Booked on ${newApt.date} at ${newApt.time} with ${newApt.doctorName}`
+          details: `Booked on ${newApt.date} at ${newApt.time} (${durationMins} mins) with ${newApt.doctorName}. Patient: ${patientName}, Symptoms: ${symptoms}`
         });
 
+        // 1. Instant Notification for Doctor with Patient Name, Time, Duration & Problem
+        const docUser = (db.data.users || []).find(u => u.doctorId === body.doctorId || (doctor && u.id === doctor.userId)) || null;
+        const docUserId = docUser ? docUser.id : (doctor?.userId || body.doctorId);
+
+        db.createNotification({
+          userId: docUserId,
+          doctorId: body.doctorId,
+          role: "doctor",
+          title: `New Patient Appointment 📅 (#${newApt.id})`,
+          message: `${patientName} has booked an appointment for ${newApt.date} at ${newApt.time} (${durationMins} mins). Problem: ${symptoms}.`,
+          type: "appointment",
+          link: "#doctor-console"
+        });
+
+        // 2. Instant Notification for Patient
         db.createNotification({
           userId: auth.user.id,
-          role: auth.user.role,
-          title: "Appointment Booked & Confirmed",
-          message: `Your appointment #${newApt.id} with ${newApt.doctorName} is confirmed for ${newApt.date} at ${newApt.time}.`,
+          role: auth.user.role || "patient",
+          title: `Appointment Booked & Confirmed 🎉 (#${newApt.id})`,
+          message: `Your appointment with ${newApt.doctorName} is confirmed for ${newApt.date} at ${newApt.time} (${durationMins} mins).`,
           type: "appointment",
           link: "#appointments"
         });
@@ -240,6 +268,18 @@ export async function handleApiRequest(req, res, parsedUrl) {
         message: `Appointment #${aptId} has been updated: ${body.reason || 'Schedule adjusted'}.`,
         type: "appointment",
         link: "#appointments"
+      });
+
+      // Also notify doctor
+      const docUser = (db.data.users || []).find(u => u.doctorId === apt.doctorId) || null;
+      db.createNotification({
+        userId: docUser ? docUser.id : apt.doctorId,
+        doctorId: apt.doctorId,
+        role: "doctor",
+        title: `Appointment #${aptId} ${body.status ? body.status.toUpperCase() : 'Updated'}`,
+        message: `Patient ${apt.patientName}'s appointment on ${apt.date} at ${apt.time} was updated to status: ${body.status}.`,
+        type: "appointment",
+        link: "#doctor-console"
       });
 
       return sendJson(200, { appointment: updated });
@@ -316,7 +356,9 @@ export async function handleApiRequest(req, res, parsedUrl) {
       if (!auth.authorized) return sendJson(auth.status, { error: auth.error });
 
       if (method === 'GET') {
-        const notifs = db.getNotifications(auth.user.id, auth.user.role);
+        const doc = auth.user.role === 'doctor' ? (db.getDoctorByUserId(auth.user.id) || (auth.user.doctorId ? db.getDoctorById(auth.user.doctorId) : null)) : null;
+        const doctorId = doc ? doc.id : auth.user.doctorId;
+        const notifs = db.getNotifications(auth.user.id, auth.user.role, doctorId);
         return sendJson(200, { notifications: notifs });
       }
 

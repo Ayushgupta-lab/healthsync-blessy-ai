@@ -51,7 +51,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Chief Medical Consultant with extensive clinical leadership in cardiovascular medicine, preventive health, and acute outpatient care in Hindi, Hinglish & English.",
-    consultationFee: "₹800 ($85)",
+    consultationFee: "₹800",
     feeAmount: 800,
     registrationNumber: "MCI-IND-2009-48291",
     roomNumber: "Suite 101 - Main Clinical Wing",
@@ -96,7 +96,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Specializing in complex diagnostics, multi-system pathology, blood profile analysis, and chronic condition management.",
-    consultationFee: "₹750 ($80)",
+    consultationFee: "₹750",
     feeAmount: 750,
     registrationNumber: "MCI-IND-2011-38194",
     roomNumber: "Suite 204 - Diagnostic Wing",
@@ -129,7 +129,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Dedicated specialist for migraine treatment, neurological disorders, cognitive health, stress physiology, and EEG telemetry.",
-    consultationFee: "₹950 ($100)",
+    consultationFee: "₹950",
     feeAmount: 950,
     registrationNumber: "MCI-IND-2013-88210",
     roomNumber: "Suite 302 - Neuro Care",
@@ -162,7 +162,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1594824813511-28562d4e38c3?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Senior consultant orthopedic surgeon specializing in knee and leg pain, joint preservation, spine and sports injury recovery, and arthroscopic interventions.",
-    consultationFee: "₹900 ($95)",
+    consultationFee: "₹900",
     feeAmount: 900,
     registrationNumber: "MCI-IND-2010-44910",
     roomNumber: "Suite 201 - Bone & Joint Clinic",
@@ -196,7 +196,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Expertise in asthma management, COPD, post-viral pulmonary recovery, and comprehensive sleep apnea analysis.",
-    consultationFee: "₹850 ($90)",
+    consultationFee: "₹850",
     feeAmount: 850,
     registrationNumber: "MCI-IND-2012-74819",
     roomNumber: "Suite 108 - Respiratory Wing",
@@ -229,7 +229,7 @@ export const SEED_DOCTORS = [
     photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
     badgeColor: "#0D9488",
     bio: "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
-    consultationFee: "₹850 ($90)",
+    consultationFee: "₹850",
     feeAmount: 850,
     hospital: "HealthSync Super-Specialty Hospital",
     city: "Indore",
@@ -271,6 +271,7 @@ class HealthSyncDatabase {
         const raw = fs.readFileSync(DB_FILE, 'utf8');
         this.data = JSON.parse(raw);
         this.ensureDoctorRecords();
+        this.normalizePricingData();
         this.syncFromMongoDB();
         return;
       } catch (err) {
@@ -279,7 +280,31 @@ class HealthSyncDatabase {
     }
     this.initSeedDatabase();
     this.ensureDoctorRecords();
+    this.normalizePricingData();
     this.syncFromMongoDB();
+  }
+
+  normalizePricingData() {
+    if (!this.data) return;
+    const cleanFee = (str) => {
+      if (!str || typeof str !== 'string') return '₹800';
+      return str.replace(/\s*\(\$[\d.]+\)/g, '').trim();
+    };
+
+    if (Array.isArray(this.data.doctors)) {
+      this.data.doctors.forEach(d => {
+        if (d.consultationFee) d.consultationFee = cleanFee(d.consultationFee);
+        if (d.feeAmount) {
+          d.feeAmount = typeof d.feeAmount === 'number' ? d.feeAmount : (parseInt(String(d.feeAmount).replace(/\D/g, ''), 10) || 800);
+        }
+      });
+    }
+
+    if (Array.isArray(this.data.appointments)) {
+      this.data.appointments.forEach(a => {
+        if (a.fee) a.fee = cleanFee(a.fee);
+      });
+    }
   }
 
   ensureDoctorRecords() {
@@ -318,7 +343,7 @@ class HealthSyncDatabase {
             photoUrl: profile.photoUrl || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
             badgeColor: "#0D9488",
             bio: profile.bio || `Consultant physician offering clinical outpatient care, diagnostics, and patient consultations.`,
-            consultationFee: profile.consultationFee || "₹700 ($75)",
+            consultationFee: profile.consultationFee || "₹700",
             feeAmount: profile.feeAmount || 700,
             registrationNumber: profile.registrationNumber || `MCI-IND-2024-${Math.floor(10000 + Math.random() * 90000)}`,
             roomNumber: profile.roomNumber || `Suite ${Math.floor(105 + Math.random() * 100)} - OPD Wing`,
@@ -484,7 +509,7 @@ class HealthSyncDatabase {
         symptoms: "Mild migraine aura, occasional dizziness, blood pressure review",
         urgency: "routine",
         status: "confirmed",
-        fee: "₹800 ($85)",
+        fee: "₹800",
         digitalPass: {
           passId: "DPS-10284-AX",
           qrHash: "HS-BSY-10284-VERIFIED-HASH",
@@ -515,7 +540,7 @@ class HealthSyncDatabase {
         symptoms: "Annual cardiovascular routine assessment & lipid profile review",
         urgency: "routine",
         status: "completed",
-        fee: "₹800 ($85)",
+        fee: "₹800",
         digitalPass: {
           passId: "DPS-10190-CMP",
           qrHash: "HS-BSY-10190-ARCHIVED",
@@ -910,6 +935,7 @@ class HealthSyncDatabase {
   createAppointment(aptObj) {
     const now = new Date().toISOString();
     const id = aptObj.id || `BSY-${Math.floor(10000 + Math.random() * 90000)}`;
+    const cleanFee = (aptObj.fee || "₹800").replace(/\s*\(\$[\d.]+\)/g, '').trim();
     const newApt = {
       id,
       patientId: aptObj.patientId || "usr_guest",
@@ -922,12 +948,12 @@ class HealthSyncDatabase {
       doctorSpecialty: aptObj.doctorSpecialty,
       date: aptObj.date,
       time: aptObj.time,
-      durationMinutes: aptObj.durationMinutes || 30,
+      durationMinutes: parseInt(aptObj.durationMinutes, 10) || 30,
       room: aptObj.room || "Suite 101 - Main Clinical Wing",
       symptoms: aptObj.symptoms || "Clinical consultation",
       urgency: aptObj.urgency || "routine",
       status: aptObj.status || "confirmed",
-      fee: aptObj.fee || "₹800 ($85)",
+      fee: cleanFee,
       digitalPass: aptObj.digitalPass || {
         passId: `DPS-${id}`,
         qrHash: `HS-VERIFIED-${id}-${Date.now()}`,
@@ -972,14 +998,21 @@ class HealthSyncDatabase {
   }
 
   // --- Notifications ---
-  getNotifications(userId, role) {
-    return this.data.notifications.filter(n => n.userId === userId || n.role === role);
+  getNotifications(userId, role, doctorId = null) {
+    if (!Array.isArray(this.data.notifications)) return [];
+    return this.data.notifications.filter(n => {
+      if (n.userId && n.userId === userId) return true;
+      if (doctorId && n.doctorId && n.doctorId === doctorId) return true;
+      if (!n.userId && !n.doctorId && (n.role === role || n.role === 'all')) return true;
+      return false;
+    });
   }
 
-  createNotification({ userId, role, title, message, type = "system", link = "" }) {
+  createNotification({ userId, doctorId = null, role, title, message, type = "system", link = "" }) {
     const notif = {
       id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       userId,
+      doctorId,
       role,
       title,
       message,
