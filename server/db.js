@@ -214,6 +214,41 @@ export const SEED_DOCTORS = [
         { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Lunch" }
       ]
     }
+  },
+  {
+    id: "doc_ananya",
+    name: "Dr. Ananya Roy, MD",
+    title: "Senior Consultant Dermatologist & Cosmetologist",
+    specialty: "Dermatology & Skin Care",
+    qualification: "MD (Dermatology, Venereology & Leprosy), DNB",
+    experience: "11+ years",
+    rating: 4.95,
+    reviewsCount: 310,
+    avatar: "👩‍⚕️",
+    photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
+    badgeColor: "#0D9488",
+    bio: "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
+    consultationFee: "₹850 ($90)",
+    feeAmount: 850,
+    hospital: "HealthSync Super-Specialty Hospital",
+    city: "Indore",
+    registrationNumber: "MCI-IND-2015-62914",
+    roomNumber: "Suite 105 - Dermatology Wing",
+    status: "available",
+    statusNote: "Consulting patients in OPD",
+    runningDelayMinutes: 0,
+    activeSurgery: null,
+    leaves: [],
+    routine: {
+      workStart: "09:00",
+      workEnd: "20:30",
+      slotDurationMinutes: 30,
+      bufferMinutes: 5,
+      breaks: [
+        { id: "sleep_hours", name: "Night Sleep", startTime: "21:00", endTime: "09:00", type: "sleep", description: "Off duty" },
+        { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Lunch" }
+      ]
+    }
   }
 ];
 

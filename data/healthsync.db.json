@@ -473,11 +473,11 @@
   ],
   "sessions": [
     {
-      "token": "fb0fcf9a42fc82bc2c125395baa7fdb87ea04a86ee3d11c831fc0c8e28403ac8",
-      "userId": "usr_doc_akhilesh",
-      "role": "doctor",
-      "createdAt": "2026-09-08T18:51:17.798Z",
-      "expiresAt": "2026-10-08T18:51:17.798Z"
+      "token": "b7eb7d45507a56f488f0a905d354dde28e2e4c8e8fc13135100710ff0b249d40",
+      "userId": "usr_patient_alex",
+      "role": "patient",
+      "createdAt": "2026-09-08T19:39:34.457Z",
+      "expiresAt": "2026-10-08T19:39:34.457Z"
     }
   ],
   "passwordResets": [],
@@ -538,6 +538,28 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud_1788896374462_36i2",
+      "actorId": "usr_patient_alex",
+      "actorRole": "patient",
+      "actorName": "Alex Morgan",
+      "action": "USER_LOGIN",
+      "resourceType": "session",
+      "resourceId": "b7eb7d45",
+      "details": "Successful sign-in with extended session",
+      "timestamp": "2026-09-08T19:39:34.462Z"
+    },
+    {
+      "id": "aud_1788896361555_7krj",
+      "actorId": "usr_doc_akhilesh",
+      "actorRole": "doctor",
+      "actorName": "System",
+      "action": "USER_LOGOUT",
+      "resourceType": "session",
+      "resourceId": "fb0fcf9a",
+      "details": "User initiated sign out",
+      "timestamp": "2026-09-08T19:39:21.555Z"
+    },
     {
       "id": "aud_1788893477800_r8ll",
       "actorId": "usr_doc_akhilesh",
@@ -601,12 +623,21 @@
     "enforceBreakProtection": true
   },
   "mlStats": {
-    "epoch": 43,
-    "confidenceScore": 0.947,
-    "samplesProcessed": 249,
-    "lastTrainedAt": "2026-09-08T19:22:21.218Z",
+    "epoch": 45,
+    "confidenceScore": 0.949,
+    "samplesProcessed": 251,
+    "lastTrainedAt": "2026-09-08T19:39:11.243Z",
     "slotDemandHeatmap": {
-      "16:00": 69
+      "09:00": 18,
+      "10:00": 34,
+      "11:00": 42,
+      "11:30": 56,
+      "14:00": 22,
+      "15:00": 31,
+      "16:00": 70,
+      "17:00": 52,
+      "18:00": 64,
+      "18:30": 59
     }
   }
 }

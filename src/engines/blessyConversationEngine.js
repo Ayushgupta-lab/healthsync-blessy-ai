@@ -32,7 +32,8 @@ export class BlessyConversationEngine {
       'breathless', 'saans lene me takleef', 'cannot breathe', 'saans phool rahi hai',
       'unconscious', 'behosh', 'stroke', 'paralysis', 'chot khoon', 'profuse bleeding',
       'crushing chest', 'cardiac arrest', 'severe asthma attack', 'coughing blood',
-      'head trauma unconscious', 'heavy bleeding'
+      'head trauma unconscious', 'heavy bleeding', 'severe bleeding', 'severe chest pain',
+      'severe difficulty breathing', 'stroke-like symptoms'
     ];
 
     this.outOfScopeKeywords = [
@@ -317,6 +318,15 @@ export class BlessyConversationEngine {
       }
     }
 
+    if (
+      /(seene|chhati|chati|chest).*(dard|pain|dabaav|tightness|pressure|jalan|discomfort)/i.test(text) ||
+      /(saans|breath).*(takleef|problem|phool|nahi aa|cannot|struggling)/i.test(text) ||
+      /(khoon|bleeding).*(tez|profuse|heavy|ruk nahi|severe)/i.test(text) ||
+      /(behosh|unconscious|fainted|chot.*khoon)/i.test(text)
+    ) {
+      return this.handleEmergency(text, 'acute emergency symptom', lang);
+    }
+
     // -------------------------------------------------------------
     // 0B. Scope Control (Polite Redirect for Unrelated Topics)
     // -------------------------------------------------------------
@@ -364,7 +374,164 @@ export class BlessyConversationEngine {
     }
 
     // -------------------------------------------------------------
-    // 4. Primary Explicit Option Chips (Must check before state-based fallthrough)
+    // 4. Hospital & Location Queries (Principle 9: e.g. "Indore mein skin ke liye hospital chahiye")
+    // -------------------------------------------------------------
+    if (this.isHospitalLocationQuery(text)) {
+      return this.handleHospitalLocationQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 5. Specialty Doctor Search Queries (Principle 2: e.g. "Skin ke liye kaunsa doctor?", "Pet ke liye doctor chahiye", "Mujhe dermatologist chahiye")
+    // -------------------------------------------------------------
+    if (this.isSpecialtyDoctorQuery(text)) {
+      return this.handleSpecialtyDoctorQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 6. Doctor Search / Suggestion Intent (Principle 2 & 3: e.g. "Mujhe doctor chahiye", "I need a doctor", "Which doctor should I see?")
+    // -------------------------------------------------------------
+    if (this.isDoctorSearchQuery(text) && !text.includes('available doctor') && !text.includes('show doctor') && !text.includes('doctor list') && !text.includes('doctors list')) {
+      return this.handleDoctorSearchIntent(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 7. Consultation Fee Queries ("Doctor ki fees kitni hai?") - Word boundary matching prevents "feeling" bug
+    // -------------------------------------------------------------
+    const isFeeQuery = /\b(fees?|charges?|pricing|cost)\b/i.test(text) ||
+      text.includes('kitne paise') || text.includes('kharcha') || text.includes('परामर्श शुल्क') || text.includes('फीस');
+    if (isFeeQuery && !text.includes('feeling')) {
+      return this.handleFeeQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 8. Named Doctor Selection & Specific Booking (Priority when specific doctor named)
+    // -------------------------------------------------------------
+    if (
+      text.startsWith('select_doctor_') ||
+      text.startsWith('book_with_') ||
+      text.includes('akhilesh') ||
+      text.includes('vance') ||
+      text.includes('priya') ||
+      text.includes('patel') ||
+      text.includes('khan') ||
+      text.includes('ananya') ||
+      text.includes('पटेल') ||
+      text.includes('अखिलेश') ||
+      text.includes('प्रिया') ||
+      text.includes('खान') ||
+      text.includes('अनन्या')
+    ) {
+      return this.handleDoctorSelection(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 8B. Primary Action Chips & Navigations
+    // -------------------------------------------------------------
+    if (
+      text === 'show_doctors' ||
+      text.includes('available doctor') ||
+      text.includes('show doctors') ||
+      text.includes('list doctors') ||
+      text.includes('all doctors') ||
+      text.includes('doctor list') ||
+      text.includes('doctors list') ||
+      text.includes('doctors dikhao') ||
+      text.includes('doctor dikhao') ||
+      text === 'doctors' ||
+      text === 'डॉक्टर' ||
+      text === 'डॉक्टरों'
+    ) {
+      return this.handleShowDoctors(text, lang);
+    }
+
+    if (
+      text === 'book_appointment' ||
+      text === 'intent_book' ||
+      text.includes('book an appointment') ||
+      text.includes('book appointment') ||
+      text.includes('schedule appointment') ||
+      text.includes('want to book') ||
+      text.includes('appointment book') ||
+      text.includes('appointment chahiye') ||
+      text.includes('appointment lena hai') ||
+      text.includes('appointment book karo') ||
+      text.includes('appointment karo') ||
+      text.includes('book slot')
+    ) {
+      return this.handleBookingIntent(text, lang);
+    }
+
+    if (
+      text === 'discuss_symptoms' ||
+      text.includes('discuss symptoms') ||
+      text.includes('check symptoms') ||
+      text.includes('talk about symptoms') ||
+      text.includes('symptom discussion') ||
+      text.includes('intent_symptoms') ||
+      text.includes('takleef discuss') ||
+      text.includes('lakshan discuss') ||
+      text.includes('lakshan batayein') ||
+      text === 'lakshan' ||
+      text === 'symptoms' ||
+      text === 'लक्षण' ||
+      text.includes('लक्षण बताएं') ||
+      text.includes('लक्षण डिसकस')
+    ) {
+      return this.handleDiscussSymptoms(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 9. Symptom Analysis (Multi-Turn Symptom Details & Medical Queries)
+    // -------------------------------------------------------------
+    if (
+      this.session.state === 'DISCUSSING_SYMPTOMS' ||
+      this.session.state === 'AWAITING_PROBLEM_FOR_DOCTOR' ||
+      this.session.state === 'AWAITING_SYMPTOM_DETAILS' ||
+      this.isMedicalSymptomQuery(text)
+    ) {
+      return this.handleSymptomAnalysis(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 10. Time Negotiation / Preferred Slots (e.g. "4 baje", "6 baje", "6:30 baje")
+    // -------------------------------------------------------------
+    const parsedTimeValue = this.parseTime(text);
+    if (
+      text.startsWith('confirm_time_') ||
+      text.startsWith('slot_tomorrow_') ||
+      (parsedTimeValue !== null && !text.includes('book an appointment')) ||
+      text.includes('milenge') ||
+      text.includes('free hain') ||
+      text.includes('slot hai') ||
+      (this.session.state === 'SELECTING_DATE_TIME' && parsedTimeValue !== null)
+    ) {
+      return this.handleSlotNegotiation(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 11. Appointment Lookup Query ("Meri appointment kab hai?")
+    // -------------------------------------------------------------
+    const isBookingPhrase = text.includes('book') || text.includes('karo') || text.includes('karna') ||
+      text.includes('kariye') || text.includes('chahiye') || text.includes('lena hai') || text.includes('schedule') ||
+      text.includes('बुक') || text.includes('चाहिए');
+
+    if (
+      !isBookingPhrase && (
+        text.includes('appointment kab') ||
+        text.includes('when is my appointment') ||
+        text.includes('meri appointment') ||
+        text.includes('mera appointment') ||
+        text.includes('my appointment') ||
+        text.includes('appointment details') ||
+        text.includes('show my appointment') ||
+        text.includes('appointments dikhao')
+      )
+    ) {
+      return this.handleAppointmentQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 12. Explicit Catalog Chips & Option Requests
     // -------------------------------------------------------------
     if (
       text === 'show_doctors' ||
@@ -381,8 +548,8 @@ export class BlessyConversationEngine {
       text.includes('doctor dikhao') ||
       text.includes('check available doctors') ||
       text === 'doctors' ||
-      text.includes('डॉक्टर') ||
-      text.includes('डॉक्टरों')
+      text === 'डॉक्टर' ||
+      text === 'डॉक्टरों'
     ) {
       return this.handleShowDoctors(text, lang);
     }
@@ -405,106 +572,6 @@ export class BlessyConversationEngine {
     if (
       text === 'book_appointment' ||
       text === 'intent_book' ||
-      text === 'book' ||
-      text === 'appointment' ||
-      text.includes('अपॉइंटमेंट') ||
-      text.includes('बुक करो')
-    ) {
-      return this.handleBookingIntent(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 5. Consultation Fee Queries ("Doctor ki fees kitni hai?")
-    // -------------------------------------------------------------
-    if (
-      text.includes('fees') ||
-      text.includes('fee') ||
-      text.includes('charge') ||
-      text.includes('charges') ||
-      text.includes('kitne paise') ||
-      text.includes('kharcha') ||
-      text.includes('cost') ||
-      text.includes('परामर्श शुल्क') ||
-      text.includes('फीस')
-    ) {
-      return this.handleFeeQuery(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 6. Doctor Selection & Specific Booking (Priority when specific doctor named)
-    // -------------------------------------------------------------
-    if (
-      text.startsWith('select_doctor_') ||
-      text.startsWith('book_with_') ||
-      text.includes('akhilesh') ||
-      text.includes('vance') ||
-      text.includes('priya') ||
-      text.includes('patel') ||
-      text.includes('khan') ||
-      text.includes('ortho') ||
-      text.includes('neuro') ||
-      text.includes('cardio') ||
-      text.includes('पटेल') ||
-      text.includes('अखिलेश') ||
-      text.includes('प्रिया') ||
-      text.includes('खान')
-    ) {
-      return this.handleDoctorSelection(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 7. Symptom Analysis (Multi-Turn Symptom Details & Medical Queries)
-    // -------------------------------------------------------------
-    if (
-      this.session.state === 'DISCUSSING_SYMPTOMS' ||
-      this.session.state === 'AWAITING_SYMPTOM_DETAILS' ||
-      this.isMedicalSymptomQuery(text)
-    ) {
-      return this.handleSymptomAnalysis(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 8. Time Negotiation / Preferred Slots (e.g. "4 baje", "6 baje", "6:30 baje")
-    // -------------------------------------------------------------
-    const parsedTimeValue = this.parseTime(text);
-    if (
-      text.startsWith('confirm_time_') ||
-      text.startsWith('slot_tomorrow_') ||
-      (parsedTimeValue !== null && !text.includes('book an appointment')) ||
-      text.includes('milenge') ||
-      text.includes('free hain') ||
-      text.includes('slot hai') ||
-      (this.session.state === 'SELECTING_DATE_TIME' && parsedTimeValue !== null)
-    ) {
-      return this.handleSlotNegotiation(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 9. Appointment Lookup Query ("Meri appointment kab hai?")
-    // -------------------------------------------------------------
-    const isBookingPhrase = text.includes('book') || text.includes('karo') || text.includes('karna') ||
-      text.includes('kariye') || text.includes('chahiye') || text.includes('lena hai') || text.includes('schedule') ||
-      text.includes('बुक') || text.includes('चाहिए');
-
-    if (
-      !isBookingPhrase && (
-        text.includes('appointment kab') ||
-        text.includes('when is my appointment') ||
-        text.includes('meri appointment') ||
-        text.includes('mera appointment') ||
-        text.includes('my appointment') ||
-        text.includes('appointment details') ||
-        text.includes('show my appointment') ||
-        text.includes('appointments dikhao')
-      )
-    ) {
-      return this.handleAppointmentQuery(text, lang);
-    }
-
-    // -------------------------------------------------------------
-    // 10. Generic Booking Intent ("Mera appointment book karo")
-    // -------------------------------------------------------------
-    if (
       text.includes('book an appointment') ||
       text.includes('book appointment') ||
       text.includes('schedule appointment') ||
@@ -521,14 +588,14 @@ export class BlessyConversationEngine {
     }
 
     // -------------------------------------------------------------
-    // 11. Greetings
+    // 13. Greetings
     // -------------------------------------------------------------
     if (['hello', 'hi', 'namaste', 'hey', 'blessy', 'hello blessy', 'नमस्ते', 'प्रणाम'].some(g => text === g || text.startsWith(g + ' '))) {
       return this.generateGreeting(lang, this.session.user);
     }
 
     // -------------------------------------------------------------
-    // 12. Default Helpful Clinical Guidance Fallback
+    // 14. Default Helpful Clinical Guidance Fallback
     // -------------------------------------------------------------
     return this.handleDefaultFallback(text, lang);
   }
@@ -899,6 +966,187 @@ export class BlessyConversationEngine {
     };
   }
 
+  // Handler 1B: Hospital & Regional Healthcare Facility Recommendation (Principle 9)
+  handleHospitalLocationQuery(text, langParam) {
+    const lang = this.getLang(langParam);
+    const lower = text.toLowerCase();
+    let city = 'Indore';
+    if (lower.includes('mumbai') || lower.includes('बॉम्बे')) city = 'Mumbai';
+    else if (lower.includes('delhi') || lower.includes('दिल्ली')) city = 'Delhi';
+
+    let specialty = 'Dermatology & Skin Care';
+    let docId = 'doc_ananya';
+    if (lower.includes('skin') || lower.includes('dermatol') || lower.includes('allergy') || lower.includes('tvacha') || lower.includes('त्वचा') || lower.includes('खुजली')) {
+      specialty = 'Dermatology & Skin Care';
+      docId = 'doc_ananya';
+    } else if (lower.includes('pet') || lower.includes('stomach') || lower.includes('gastro') || lower.includes('पेट')) {
+      specialty = 'Internal Medicine & Diagnostics';
+      docId = 'doc_vance';
+    } else if (lower.includes('heart') || lower.includes('cardio') || lower.includes('dil') || lower.includes('दिल')) {
+      specialty = 'Cardiology & General Medicine';
+      docId = 'doc_akhilesh';
+    } else if (lower.includes('ortho') || lower.includes('joint') || lower.includes('haddi') || lower.includes('हड्डी')) {
+      specialty = 'Orthopedics & Joint Care';
+      docId = 'doc_patel';
+    }
+
+    const hospitals = storageService.getHospitalsByLocation(city);
+    const targetHosp = hospitals[0] || storageService.getHospitals()[0];
+    const doctor = storageService.getDoctorById(docId) || storageService.getDoctors()[0];
+    this.session.doctorId = doctor.id;
+    this.session.doctorName = doctor.name;
+    this.session.state = 'SELECTING_DATE_TIME';
+
+    if (lang === 'hindi') {
+      return {
+        type: 'hospital_recommendation',
+        data: { hospital: targetHosp, doctor },
+        message: `${city} में हमारा पंजीकृत अस्पताल **${targetHosp.name}** (${targetHosp.address}, रेटिंग: ⭐ ${targetHosp.rating}) है, जहाँ ${specialty} के लिए हमारे विशेषज्ञ **${doctor.name}** उपलब्ध हैं।\n\n> ℹ️ *इन लक्षणों के कई अलग-अलग कारण हो सकते हैं। एक डॉक्टर इसकी सही जांच कर सकते हैं।*\n\n👉 **क्या मैं ${doctor.name.split(',')[0]} के साथ आपकी अपॉइंटमेंट बुक करूँ?**`,
+        actionChips: [
+          { label: `📅 ${doctor.name.split(',')[0]} के साथ बुक करें`, action: `select_doctor_${doctor.id}` },
+          { label: '⏱️ कल 11:30 AM', action: 'confirm_time_11:30' },
+          { label: '⏱️ कल 04:00 PM', action: 'confirm_time_16:00' }
+        ]
+      };
+    }
+
+    if (lang === 'hinglish') {
+      return {
+        type: 'hospital_recommendation',
+        data: { hospital: targetHosp, doctor },
+        message: `${city} mein hamara registered hospital **${targetHosp.name}** (${targetHosp.address}, Rating: ⭐ ${targetHosp.rating}) hai, jahan ${specialty} ke liye hamare verified specialist **${doctor.name}** available hain.\n\n> ℹ️ *In symptoms ke alag-alag causes ho sakte hain. Ek doctor iski proper jaanch kar sakte hain.*\n\n👉 **Kya main ${doctor.name.split(',')[0]} ke saath aapki appointment book kar doon?**`,
+        actionChips: [
+          { label: `📅 Book with ${doctor.name.split(',')[0]}`, action: `select_doctor_${doctor.id}` },
+          { label: '⏱️ Kal 11:30 AM', action: 'confirm_time_11:30' },
+          { label: '⏱️ Kal 04:00 PM', action: 'confirm_time_16:00' }
+        ]
+      };
+    }
+
+    return {
+      type: 'hospital_recommendation',
+      data: { hospital: targetHosp, doctor },
+      message: `In ${city}, our registered hospital is **${targetHosp.name}** (${targetHosp.address}, Rating: ⭐ ${targetHosp.rating}), where **${doctor.name}** is available for ${specialty}.\n\n> ℹ️ *These symptoms can have different causes. A doctor can evaluate you properly.*\n\n👉 **Would you like me to book an appointment with ${doctor.name.split(',')[0]}?**`,
+      actionChips: [
+        { label: `📅 Book with ${doctor.name.split(',')[0]}`, action: `select_doctor_${doctor.id}` },
+        { label: '⏱️ Tomorrow 11:30 AM', action: 'confirm_time_11:30' },
+        { label: '⏱️ Tomorrow 04:00 PM', action: 'confirm_time_16:00' }
+      ]
+    };
+  }
+
+  // Handler 1C: Specialty Doctor Match (Principle 2)
+  handleSpecialtyDoctorQuery(text, langParam) {
+    const lang = this.getLang(langParam);
+    const lower = text.toLowerCase();
+    let docId = 'doc_akhilesh';
+
+    if (lower.includes('skin') || lower.includes('dermatol') || lower.includes('allergy') || lower.includes('tvacha') || lower.includes('chamdi') || lower.includes('खुजली') || lower.includes('त्वचा')) {
+      docId = 'doc_ananya';
+    } else if (lower.includes('pet') || lower.includes('stomach') || lower.includes('gastro') || lower.includes('acidity') || lower.includes('digestion') || lower.includes('पेट')) {
+      docId = 'doc_vance';
+    } else if (lower.includes('haddi') || lower.includes('joint') || lower.includes('ortho') || lower.includes('knee') || lower.includes('bone') || lower.includes('हड्डी') || lower.includes('घुटने')) {
+      docId = 'doc_patel';
+    } else if (lower.includes('neuro') || lower.includes('sar dard') || lower.includes('migraine') || lower.includes('headache') || lower.includes('न्यूरो') || lower.includes('सिरदर्द')) {
+      docId = 'doc_priya';
+    } else if (lower.includes('chest') || lower.includes('cough') || lower.includes('khansi') || lower.includes('lungs') || lower.includes('pulmon') || lower.includes('सांस')) {
+      docId = 'doc_khan';
+    } else if (lower.includes('heart') || lower.includes('cardio') || lower.includes('dil') || lower.includes('दिल')) {
+      docId = 'doc_akhilesh';
+    }
+
+    const doctor = storageService.getDoctorById(docId) || storageService.getDoctors()[0];
+    this.session.doctorId = doctor.id;
+    this.session.doctorName = doctor.name;
+    this.session.state = 'SELECTING_DATE_TIME';
+
+    if (lang === 'hindi') {
+      return {
+        type: 'specialty_doctor_recommendation',
+        data: doctor,
+        message: `${doctor.specialty} के लिए हमारे विशेषज्ञ **${doctor.name}** (${doctor.roomNumber}, परामर्श शुल्क: ${doctor.consultationFee}) हैं।\n\n> ℹ️ *इन लक्षणों के कई अलग-अलग कारण हो सकते हैं। एक डॉक्टर इसकी सही जांच कर सकते हैं।*\n\n👉 **क्या मैं आपके लिए ${doctor.name.split(',')[0]} के साथ अपॉइंटमेंट स्लॉट देखूँ?**`,
+        actionChips: [
+          { label: `📅 ${doctor.name.split(',')[0]} के साथ बुक करें`, action: `select_doctor_${doctor.id}` },
+          { label: '⏱️ कल 11:30 AM', action: 'confirm_time_11:30' },
+          { label: '⏱️ कल 04:00 PM', action: 'confirm_time_16:00' },
+          { label: '👀 सभी डॉक्टर देखें', action: 'show_doctors' }
+        ]
+      };
+    }
+
+    if (lang === 'hinglish') {
+      return {
+        type: 'specialty_doctor_recommendation',
+        data: doctor,
+        message: `${doctor.specialty} ke liye hamare verified specialist **${doctor.name}** (${doctor.roomNumber}, Fee: ${doctor.consultationFee}) hain.\n\n> ℹ️ *In symptoms ke alag-alag causes ho sakte hain. Ek doctor iski proper jaanch kar sakte hain.*\n\n👉 **Kya main aapke liye ${doctor.name.split(',')[0]} ke saath appointment slot check karoon?**`,
+        actionChips: [
+          { label: `📅 Book with ${doctor.name.split(',')[0]}`, action: `select_doctor_${doctor.id}` },
+          { label: '⏱️ Kal 11:30 AM', action: 'confirm_time_11:30' },
+          { label: '⏱️ Kal 04:00 PM', action: 'confirm_time_16:00' },
+          { label: '👀 Sabhi Doctors Dekhein', action: 'show_doctors' }
+        ]
+      };
+    }
+
+    return {
+      type: 'specialty_doctor_recommendation',
+      data: doctor,
+      message: `For ${doctor.specialty}, our specialist is **${doctor.name}** (${doctor.roomNumber}, Fee: ${doctor.consultationFee}).\n\n> ℹ️ *These symptoms can have different causes. A doctor can evaluate you properly.*\n\n👉 **Would you like me to check an available consultation slot with ${doctor.name.split(',')[0]}?**`,
+      actionChips: [
+        { label: `📅 Book with ${doctor.name.split(',')[0]}`, action: `select_doctor_${doctor.id}` },
+        { label: '⏱️ Tomorrow 11:30 AM', action: 'confirm_time_11:30' },
+        { label: '⏱️ Tomorrow 04:00 PM', action: 'confirm_time_16:00' },
+        { label: '👀 View All Doctors', action: 'show_doctors' }
+      ]
+    };
+  }
+
+  // Handler 1D: Doctor Search / Suggestion Intent Workflow (Principle 2 & 3)
+  handleDoctorSearchIntent(text, langParam) {
+    const lang = this.getLang(langParam);
+    this.session.state = 'AWAITING_PROBLEM_FOR_DOCTOR';
+
+    if (lang === 'hindi') {
+      return {
+        type: 'doctor_suggestion_prompt',
+        message: `बिल्कुल। आपको किस स्वास्थ्य समस्या के लिए डॉक्टर चाहिए?`,
+        actionChips: [
+          { label: '🧴 त्वचा / एलर्जी की समस्या', action: 'मुझे स्किन पे एलर्जी हो रही है' },
+          { label: '🤢 पेट में दर्द', action: 'मेरे पेट में दर्द हो रहा है' },
+          { label: '🧠 सिरदर्द या माइग्रेन', action: 'मेरे सिर में दर्द है' },
+          { label: '🦵 पैर या जोड़ों में दर्द', action: 'मेरे पैरों में दर्द है' },
+          { label: '🌡️ बुखार और खांसी', action: 'मुझे बुखार और खांसी है' }
+        ]
+      };
+    }
+
+    if (lang === 'hinglish') {
+      return {
+        type: 'doctor_suggestion_prompt',
+        message: `Bilkul. Aapko kis takleef ya problem ke liye doctor chahiye?`,
+        actionChips: [
+          { label: '🧴 Skin pe allergy / problem', action: 'Mujhe skin pe allergy ho rahi hai' },
+          { label: '🤢 Pet mein dard / problem', action: 'Mere pet mein dard ho raha hai' },
+          { label: '🧠 Sar dard / Migraine', action: 'Mere sir mein dard hai' },
+          { label: '🦵 Pairon / Haddi ka dard', action: 'Mere pairon mein dard hai' },
+          { label: '🌡️ Bukhar ya khansi', action: 'Mujhe bukhar aur khasi hai' }
+        ]
+      };
+    }
+
+    return {
+      type: 'doctor_suggestion_prompt',
+      message: `Sure. What health problem or symptoms are you experiencing?`,
+      actionChips: [
+        { label: '🧴 Skin problem / allergy', action: 'I have a skin problem' },
+        { label: '🤢 Stomach pain', action: 'I have pain in my stomach' },
+        { label: '🧠 Headache / Migraine', action: 'My head has been hurting' },
+        { label: '🦵 Leg / Joint pain', action: 'I have joint and leg pain' },
+        { label: '🌡️ Fever / Cough', action: 'I have fever and cough' }
+      ]
+    };
+  }
+
   // Handler 2: Discuss Symptoms (Initial Interactive Prompt)
   handleDiscussSymptoms(text, langParam) {
     const lang = this.getLang(langParam);
@@ -907,12 +1155,13 @@ export class BlessyConversationEngine {
     if (lang === 'hindi') {
       return {
         type: 'discuss_symptoms_prompt',
-        message: `💬 **क्लिनिकल लक्षण मूल्यांकन**\n\nमैं आपके लक्षण समझकर सही विशेषज्ञ डॉक्टर चुनने में आपकी मदद करती हूँ।\n\n👉 **कृपया बताएं कि आपको क्या तकलीफ़ या लक्षण हैं?**\n(जैसे: *'पैरों या घुटने में दर्द है'*, *'3 दिन से बुखार है'*, या *'सिर में तेज दर्द है'*)।\n\nआप नीचे दिए गए मुख्य लक्षणों में से भी चुन सकते हैं:`,
+        message: `💬 **क्लिनिकल लक्षण मूल्यांकन**\n\nमैं आपके लक्षण समझकर सही विशेषज्ञ डॉक्टर चुनने में आपकी सहायता करती हूँ।\n\n👉 **कृपया बताएं कि आपको क्या तकलीफ़ या लक्षण हैं?**`,
         actionChips: [
-          { label: '🦵 पैर या जोड़ों में दर्द', action: 'Mere pairon mein dard hai' },
-          { label: '🌡️ बुखार और खांसी', action: 'Mujhe bukhar aur khasi hai' },
-          { label: '🧠 सिरदर्द या माइग्रेन', action: 'Mujhe sar dard hai' },
-          { label: '🤢 पेट दर्द या एसिडिटी', action: 'Mujhe pet me dard hai' }
+          { label: '🧴 त्वचा की एलर्जी', action: 'मुझे स्किन पे एलर्जी हो रही है' },
+          { label: '🤢 पेट में दर्द', action: 'मेरे पेट में दर्द हो रहा है' },
+          { label: '🧠 सिरदर्द या माइग्रेन', action: 'मुझे सिर में दर्द है' },
+          { label: '🦵 पैर या जोड़ों में दर्द', action: 'मेरे पैरों में दर्द है' },
+          { label: '🌡️ बुखार और खांसी', action: 'मुझे बुखार और खांसी है' }
         ]
       };
     }
@@ -920,24 +1169,26 @@ export class BlessyConversationEngine {
     if (lang === 'hinglish') {
       return {
         type: 'discuss_symptoms_prompt',
-        message: `💬 **Clinical Symptom Assessment**\n\nMain aapke lakshan samajhne aur sahi specialist recommend karne mein madad karti hoon.\n\n👉 **Aapko kya takleef ya symptoms mehsoos ho rahe hain?**\n(Jaise: *'Pairon ya ghutne mein dard hai'*, *'3 din se bukhar hai'*, ya *'Sar mein tez migraine ho raha hai'*).\n\nAap niche diye gaye common lakshan bhi chun sakte hain:`,
+        message: `💬 **Clinical Symptom Assessment**\n\nMain aapke lakshan samajhne aur sahi specialist recommend karne mein poori madad karti hoon.\n\n👉 **Aapko kya takleef ya symptoms mehsoos ho rahe hain?**`,
         actionChips: [
+          { label: '🧴 Skin allergy / problem', action: 'Mujhe skin pe allergy ho rahi hai' },
+          { label: '🤢 Pet dard / Acidity', action: 'Mere pet mein dard ho raha hai' },
+          { label: '🧠 Sar dard / Migraine', action: 'Mere sir mein dard hai' },
           { label: '🦵 Pair/Ghutne me dard', action: 'Mere pairon mein dard hai' },
-          { label: '🌡️ Bukhar aur khansi', action: 'Mujhe bukhar aur khasi hai' },
-          { label: '🧠 Sar dard / Migraine', action: 'symptom_headache' },
-          { label: '🤢 Pet dard / Acidity', action: 'symptom_stomach' }
+          { label: '🌡️ Bukhar aur khansi', action: 'Mujhe bukhar aur khasi hai' }
         ]
       };
     }
 
     return {
       type: 'discuss_symptoms_prompt',
-      message: `💬 **Clinical Symptom Assessment**\n\nI can evaluate your health symptoms and guide you to the right specialist doctor.\n\n👉 **Please describe what symptoms you are experiencing:**\n(e.g., *'Severe leg or joint pain'*, *'High fever for 2 days'*, or *'Throbbing migraine'*).\n\nYou can also select a common symptom category below:`,
+      message: `💬 **Clinical Symptom Assessment**\n\nI can evaluate your health symptoms and guide you to the right specialist doctor.\n\n👉 **Please describe what symptoms you are experiencing:**`,
       actionChips: [
-        { label: '🦵 Leg / Joint Pain', action: 'symptom_leg_joint' },
-        { label: '🌡️ Fever & Cough', action: 'symptom_fever' },
-        { label: '🧠 Headache / Migraine', action: 'symptom_headache' },
-        { label: '🤢 Stomach Pain / Acidity', action: 'symptom_stomach' }
+        { label: '🧴 Skin Problem / Allergy', action: 'I have a skin problem' },
+        { label: '🤢 Stomach Pain / Acidity', action: 'I have pain in my stomach' },
+        { label: '🧠 Headache / Migraine', action: 'My head has been hurting' },
+        { label: '🦵 Leg / Joint Pain', action: 'I have pain in my legs' },
+        { label: '🌡️ Fever & Cough', action: 'I have fever and cough' }
       ]
     };
   }
@@ -945,11 +1196,14 @@ export class BlessyConversationEngine {
   // Handler 2B: Multi-Turn Symptom Understanding & Follow-up
   handleSymptomAnalysis(text, langParam) {
     const lang = this.getLang(langParam);
-    const isDurationResponse = text.includes('day') || text.includes('din') || text.includes('mild') ||
-      text.includes('severe') || text.includes('moderate') || text.includes('subah') || text.includes('halka') ||
-      text.includes('tez') || text.includes('duration_') || text.includes('severity_') || text.includes('दिन') ||
-      text.includes('हल्का') || text.includes('तेज');
+    const lower = text.toLowerCase();
 
+    const isDurationResponse = lower.includes('day') || lower.includes('din') || lower.includes('mild') ||
+      lower.includes('severe') || lower.includes('moderate') || lower.includes('subah') || lower.includes('halka') ||
+      lower.includes('tez') || lower.includes('duration_') || lower.includes('severity_') || lower.includes('दिन') ||
+      lower.includes('हल्का') || lower.includes('तेज') || lower.includes('week') || lower.includes('haft');
+
+    // If waiting for duration details and user gave duration, finalize recommendation
     if (this.session.state === 'AWAITING_SYMPTOM_DETAILS' && isDurationResponse) {
       this.session.symptoms.duration = text;
       this.session.state = 'SELECTING_DOCTOR';
@@ -957,80 +1211,134 @@ export class BlessyConversationEngine {
       return this.provideSymptomRecommendation(category, lang);
     }
 
-    // Categorize Condition
+    // Generic symptom opener check: If user hasn't specified what the problem is, ask for the problem
+    const isGenericOpener = (
+      lower.includes('discuss my symptoms') || lower.includes('have some symptoms') ||
+      lower.includes('what is wrong') || lower.includes("what's wrong") ||
+      lower.includes('not feeling well') || lower.includes('health problem') ||
+      lower.includes('health issue') || lower.includes('tell you my problem') ||
+      lower.includes('wrong with my health') || lower.includes('tabiyat kharab') ||
+      lower.includes('tabiyat theek nahi') || lower.includes('kuch health problem') ||
+      lower.includes('apni problem batani') || lower.includes('symptoms kya indicate') ||
+      lower.includes('problem discuss') || lower.includes('kya karu') ||
+      lower.includes('तबियत खराब') || lower.includes('लक्षण')
+    ) && !lower.includes('pet') && !lower.includes('stomach') && !lower.includes('skin') &&
+         !lower.includes('allergy') && !lower.includes('head') && !lower.includes('sar') &&
+         !lower.includes('sir') && !lower.includes('pair') && !lower.includes('leg') &&
+         !lower.includes('bukhar') && !lower.includes('fever') && !lower.includes('khansi') &&
+         !lower.includes('cough') && !lower.includes('chest') && !lower.includes('heart');
+
+    if (isGenericOpener) {
+      this.session.state = 'DISCUSSING_SYMPTOMS';
+      if (lang === 'hindi') {
+        return {
+          type: 'discuss_symptoms_prompt',
+          message: `बिल्कुल। आपको क्या स्वास्थ्य समस्या या लक्षण महसूस हो रहे हैं? कृपया बताएं।`,
+          actionChips: [
+            { label: '🧴 त्वचा की एलर्जी', action: 'मुझे स्किन पे एलर्जी हो रही है' },
+            { label: '🤢 पेट में दर्द', action: 'मेरे पेट में दर्द हो रहा है' },
+            { label: '🧠 सिरदर्द या माइग्रेन', action: 'मेरे सिर में दर्द है' },
+            { label: '🦵 पैर या जोड़ों में दर्द', action: 'मेरे पैरों में दर्द है' },
+            { label: '🌡️ बुखार और खांसी', action: 'मुझे बुखार और खांसी है' }
+          ]
+        };
+      }
+      if (lang === 'hinglish') {
+        return {
+          type: 'discuss_symptoms_prompt',
+          message: `Bilkul. Aapko kya takleef ya health symptoms mehsoos ho rahe hain? Kripya batayein.`,
+          actionChips: [
+            { label: '🧴 Skin allergy / problem', action: 'Mujhe skin pe allergy ho rahi hai' },
+            { label: '🤢 Pet dard / Acidity', action: 'Mere pet mein dard ho raha hai' },
+            { label: '🧠 Sar dard / Migraine', action: 'Mere sir mein dard hai' },
+            { label: '🦵 Pair/Ghutne me dard', action: 'Mere pairon mein dard hai' },
+            { label: '🌡️ Bukhar aur khansi', action: 'Mujhe bukhar aur khasi hai' }
+          ]
+        };
+      }
+      return {
+        type: 'discuss_symptoms_prompt',
+        message: `Sure. Please tell me what health symptoms or discomfort you are experiencing.`,
+        actionChips: [
+          { label: '🧴 Skin Problem / Allergy', action: 'I have a skin problem' },
+          { label: '🤢 Stomach Pain / Acidity', action: 'I have pain in my stomach' },
+          { label: '🧠 Headache / Migraine', action: 'My head has been hurting' },
+          { label: '🦵 Leg / Joint Pain', action: 'I have pain in my legs' },
+          { label: '🌡️ Fever & Cough', action: 'I have fever and cough' }
+        ]
+      };
+    }
+
+    // Categorize Condition based on specific medical tokens
     let category = 'general';
     if (
-      text.includes('pair') || text.includes('pairon') || text.includes('taang') ||
-      text.includes('leg') || text.includes('legs') || text.includes('knee') ||
-      text.includes('ghutne') || text.includes('ghutna') || text.includes('foot') ||
-      text.includes('feet') || text.includes('ankle') || text.includes('haddi') ||
-      text.includes('bone') || text.includes('joint') || text.includes('joints') ||
-      text.includes('kamar') || text.includes('back pain') || text.includes('sprain') ||
-      text.includes('ortho') || text.includes('symptom_leg_joint') || text.includes('symptom_joint') ||
-      text.includes('पैर') || text.includes('पैरों') || text.includes('घुटने') || text.includes('हड्डी') ||
-      text.includes('जोड़')
+      lower.includes('skin') || lower.includes('allergy') || lower.includes('rash') ||
+      lower.includes('khujli') || lower.includes('itching') || lower.includes('daane') ||
+      lower.includes('dermatol') || lower.includes('eczema') || lower.includes('tvacha') ||
+      lower.includes('त्वचा') || lower.includes('खुजली') || lower.includes('एलर्जी')
     ) {
-      category = 'ortho';
+      category = 'skin';
     } else if (
-      text.includes('headache') || text.includes('sar dard') || text.includes('sir dard') ||
-      text.includes('migraine') || text.includes('sar me') || text.includes('symptom_headache') ||
-      text.includes('सिरदर्द') || text.includes('सिर दर्द')
-    ) {
-      category = 'headache';
-    } else if (
-      text.includes('cough') || text.includes('khansi') || text.includes('asthma') ||
-      text.includes('saans') || text.includes('chest congestion') || text.includes('खांसी') || text.includes('सांस')
-    ) {
-      category = 'respiratory';
-    } else if (
-      text.includes('fever') || text.includes('bukhar') || text.includes('cold') ||
-      text.includes('jukaam') || text.includes('symptom_fever') || text.includes('बुखार') || text.includes('जुकाम')
-    ) {
-      category = 'fever';
-    } else if (
-      text.includes('stomach') || text.includes('pet dard') || text.includes('acidity') ||
-      text.includes('vomiting') || text.includes('ulti') || text.includes('gas') || text.includes('symptom_stomach') ||
-      text.includes('पेट दर्द') || text.includes('उल्टी')
+      lower.includes('stomach') || lower.includes('pet') || lower.includes('pet dard') ||
+      lower.includes('acidity') || lower.includes('vomiting') || lower.includes('ulti') ||
+      lower.includes('gas') || lower.includes('digestion') || lower.includes('symptom_stomach') ||
+      lower.includes('पेट दर्द') || lower.includes('उल्टी') || lower.includes('पेट')
     ) {
       category = 'stomach';
     } else if (
-      text.includes('cardio') || text.includes('heart') || text.includes('chhati') ||
-      text.includes('palpitation') || text.includes('bp') || text.includes('blood pressure') ||
-      text.includes('दिल') || text.includes('धड़कन')
+      lower.includes('headache') || lower.includes('sar dard') || lower.includes('sir dard') ||
+      lower.includes('migraine') || lower.includes('sar me') || lower.includes('hurting') ||
+      lower.includes('symptom_headache') || lower.includes('सिरदर्द') || lower.includes('सिर दर्द')
+    ) {
+      category = 'headache';
+    } else if (
+      lower.includes('pair') || lower.includes('pairon') || lower.includes('taang') ||
+      lower.includes('leg') || lower.includes('legs') || lower.includes('knee') ||
+      lower.includes('ghutne') || lower.includes('ghutna') || lower.includes('foot') ||
+      lower.includes('feet') || lower.includes('ankle') || lower.includes('haddi') ||
+      lower.includes('bone') || lower.includes('joint') || lower.includes('joints') ||
+      lower.includes('kamar') || lower.includes('back pain') || lower.includes('sprain') ||
+      lower.includes('ortho') || lower.includes('symptom_leg_joint') || lower.includes('symptom_joint') ||
+      lower.includes('पैर') || lower.includes('पैरों') || lower.includes('घुटने') || lower.includes('हड्डी') ||
+      lower.includes('जोड़')
+    ) {
+      category = 'ortho';
+    } else if (
+      lower.includes('cough') || lower.includes('khansi') || lower.includes('asthma') ||
+      lower.includes('saans') || lower.includes('chest congestion') || lower.includes('खांसी') || lower.includes('सांस')
+    ) {
+      category = 'respiratory';
+    } else if (
+      lower.includes('fever') || lower.includes('bukhar') || lower.includes('cold') ||
+      lower.includes('jukaam') || lower.includes('symptom_fever') || lower.includes('बुखार') || lower.includes('जुकाम')
+    ) {
+      category = 'fever';
+    } else if (
+      lower.includes('cardio') || lower.includes('heart') || lower.includes('chhati') ||
+      lower.includes('palpitation') || lower.includes('bp') || lower.includes('blood pressure') ||
+      lower.includes('दिल') || lower.includes('धड़कन')
     ) {
       category = 'cardio';
     }
-    // Consult ML engine for learned semantic associations and update model weights
-    try {
-      const mlPrediction = blessyLearningEngine.predictSpecialist(text);
-      if (mlPrediction.matchedKeywords > 0 && category === 'general') {
-        category = mlPrediction.specialty;
-      }
-      blessyLearningEngine.trainOnInteraction({
-        userText: text,
-        specialty: category,
-        doctorId: this.session.doctorId,
-        bookedTime: null,
-        language: lang,
-        success: true
-      });
-    } catch {}
 
     this.session.symptoms.category = category;
     this.session.symptoms.raw = text;
 
-    // Multi-turn check: If user gave brief mention without duration, ask follow-up
-    if (!text.includes('din') && !text.includes('day') && !text.includes('week') && !text.includes('mild') && !text.includes('severe') && !text.includes('दिन') && !text.includes('तेज') && !text.includes('हल्का')) {
+    // Check if duration is already specified in this turn (e.g. "3 din se", "2 days", "ek week se")
+    const hasDurationAlready = lower.includes('din') || lower.includes('day') || lower.includes('week') ||
+      lower.includes('haft') || lower.includes('since') || lower.includes('दिन') || lower.includes('हफ्ते');
+
+    if (!hasDurationAlready) {
       this.session.state = 'AWAITING_SYMPTOM_DETAILS';
 
       if (lang === 'hindi') {
         return {
           type: 'symptom_followup',
-          message: `मैं समझ सकती हूँ। आपके लक्षण नोट कर लिए गए हैं।\n\nसटीक विशेषज्ञ और सही समय स्लॉट तय करने के लिए, कृपया बताएं:\n• **यह दर्द या तकलीफ़ कितने दिनों से है?** (जैसे: *'आज से'*, या *'2-3 दिनों से'*)\n• **तकलीफ़ कितनी तेज़ है?** (**हल्का**, **मध्यम**, या **बहुत तेज़**)?`,
+          message: `समझ गया। यह समस्या आपको कब से हो रही है?`,
           actionChips: [
-            { label: '🗓️ 1-2 दिन से (हल्का)', action: '2 din se halka dard hai' },
-            { label: '🗓️ 3+ दिन से (मध्यम)', action: '3 din se dard hai' },
-            { label: '⚡ बहुत तेज़ दर्द', action: 'bohot tez dard hai' }
+            { label: '🗓️ 1-2 दिन से', action: '1-2 din se' },
+            { label: '🗓️ तीन दिन से', action: 'Teen din se' },
+            { label: '🗓️ एक सप्ताह से', action: 'Ek week se' }
           ]
         };
       }
@@ -1038,26 +1346,27 @@ export class BlessyConversationEngine {
       if (lang === 'hinglish') {
         return {
           type: 'symptom_followup',
-          message: `Samajh gayi! Isko theek se evaluate karne ke liye kripya **2 zaroori baatein** batayein:\n\n1. Yeh takleef **kitne samay se hai**? (Jaise: *'Aaj se'*, ya *'2-3 dino se'*)\n2. Takleef kitni hai? (**Halka / Mild**, **Medium**, ya **Tez / Severe**)?\n\nNiche se chun sakte hain:`,
+          message: `Samajh gaya. Ye problem kab se ho rahi hai?`,
           actionChips: [
-            { label: '🗓️ 1-2 Days (Mild)', action: '2 din se halka dard hai' },
-            { label: '🗓️ 3+ Days (Moderate)', action: '3 din se dard hai' },
-            { label: '⚡ Severe / High Discomfort', action: 'bohot tez dard hai' }
+            { label: '🗓️ 1-2 din se', action: '1-2 din se' },
+            { label: '🗓️ Teen din se', action: 'Teen din se' },
+            { label: '🗓️ Ek week se', action: 'Ek week se' }
           ]
         };
       }
 
       return {
         type: 'symptom_followup',
-        message: `Understood. To provide accurate guidance and find the right specialist, please let me know:\n\n1. **Duration**: How long have you experienced this? (e.g., *'Since today'*, *'2-3 days'*)\n2. **Intensity**: Is the discomfort **Mild**, **Moderate**, or **Severe**?\n\nYou can select below:`,
+        message: `Understood. How long have you been experiencing this problem?`,
         actionChips: [
-          { label: '🗓️ 1-2 Days (Mild)', action: 'duration_1_2_mild' },
-          { label: '🗓️ 3+ Days (Moderate)', action: 'duration_3_plus_mod' },
-          { label: '⚡ Severe / High Discomfort', action: 'severity_severe' }
+          { label: '🗓️ 1-2 days', action: 'duration_1_2_mild' },
+          { label: '🗓️ 3 days', action: 'duration_3_plus_mod' },
+          { label: '🗓️ 1 week', action: 'severity_severe' }
         ]
       };
     }
 
+    this.session.symptoms.duration = text;
     this.session.state = 'SELECTING_DOCTOR';
     return this.provideSymptomRecommendation(category, lang);
   }
@@ -1067,22 +1376,44 @@ export class BlessyConversationEngine {
     const lang = this.getLang(langParam);
     let conditionName = "Clinical Consultation";
     let advice = "";
-    let recommendedDoctorId = "doc_patel";
-    let specialistName = "Dr. Rajesh Patel, MS";
-    let specialtyTitle = "Senior Orthopedic & Joint Surgeon (Suite 201)";
-    let feeText = "₹900 ($95)";
+    let recommendedDoctorId = "doc_akhilesh";
+    let specialistName = "Dr. Akhilesh Sharma, MD";
+    let specialtyTitle = "Chief Clinical Consultant & Cardiologist (Suite 101)";
+    let feeText = "₹800 ($85)";
 
-    if (category === 'ortho') {
-      conditionName = lang === 'hindi' ? "हड्डी व जोड़ संबंधित परामर्श" : (lang === 'hinglish' ? "Musculoskeletal & Orthopedic Assessment" : "Musculoskeletal & Orthopedic Assessment");
+    if (category === 'skin') {
+      conditionName = lang === 'hindi' ? "त्वचा एवं एलर्जी परामर्श" : "Dermatology & Skin Care";
+      recommendedDoctorId = "doc_ananya";
+      specialistName = "Dr. Ananya Roy, MD";
+      specialtyTitle = lang === 'hindi' ? "वरिष्ठ त्वचा विशेषज्ञ (Suite 105)" : "Senior Consultant Dermatologist & Skin Specialist (Suite 105)";
+      feeText = "₹850 ($90)";
+      advice = lang === 'hindi'
+        ? "• प्रभावित त्वचा को साफ और सूखा रखें।\n• किसी भी कठोर साबुन या केमिकल से बचें और त्वचा को नोचें या खुजलाएं नहीं।"
+        : lang === 'hinglish'
+        ? "• Affected skin ko saaf aur dry rakhein.\n• Kisi harsh soap ya chemical se bachein aur itching/scratching na karein."
+        : "• Keep the affected skin clean and dry.\n• Avoid harsh soaps or fragranced products, and refrain from scratching.";
+    } else if (category === 'stomach') {
+      conditionName = lang === 'hindi' ? "पेट दर्द एवं पाचन परामर्श" : "Gastroenterology & Internal Care";
+      recommendedDoctorId = "doc_vance";
+      specialistName = "Dr. Marcus Vance, MD";
+      specialtyTitle = lang === 'hindi' ? "वरिष्ठ डायग्नोस्टिशियन एवं फिजिशियन (Suite 204)" : "Senior Diagnostician & Internist (Suite 204)";
+      feeText = "₹750 ($80)";
+      advice = lang === 'hindi'
+        ? "• हल्का और सुपाच्य भोजन लें, मसालेदार व तले हुए खाने से बचें।\n• पर्याप्त मात्रा में गुनगुना पानी या ओआरएस पिएं।"
+        : lang === 'hinglish'
+        ? "• Halka aur easily digestible khana lein, spicy aur oily food se bachein.\n• Paryaapt gunguna paani ya ORS piyein."
+        : "• Consume light, easily digestible meals and avoid oily or spicy foods.\n• Stay hydrated with sips of warm water or oral electrolyte fluids.";
+    } else if (category === 'ortho') {
+      conditionName = lang === 'hindi' ? "हड्डी व जोड़ संबंधित परामर्श" : "Musculoskeletal & Orthopedic Assessment";
       recommendedDoctorId = "doc_patel";
       specialistName = "Dr. Rajesh Patel, MS";
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ हड्डी एवं जोड़ विशेषज्ञ (Suite 201)" : "Senior Orthopedic & Joint Specialist (Suite 201)";
       feeText = "₹900 ($95)";
       advice = lang === 'hindi'
-        ? "• **विश्राम**: पैर पर अधिक भार न डालें, लेटते समय पैर को थोड़ा ऊंचा रखें।\n• **सिकाई**: दर्द या सूजन वाले हिस्से पर 15-20 मिनट बर्फ की सिकाई करें।\n• **सावधानी**: अचानक झटके या भारी वजन उठाने से बचें।"
+        ? "• पैर पर अधिक भार न डालें, लेटते समय पैर को थोड़ा ऊंचा रखें।\n• दर्द या सूजन वाले हिस्से पर 15-20 मिनट बर्फ की सिकाई करें।"
         : lang === 'hinglish'
-        ? "• **Vishram & Elevation**: Pair par zyada bojh ya wazan na dalein. Pair ko uncha rakh kar rest karein.\n• **Cold Compress**: Dard ya sujan wale hisse par 15-20 minute cold/ice pack lagayein.\n• **Gentle Movement**: Achanak jhatke ya bhari wazan uthane se bachein."
-        : "• **Rest & Elevate**: Avoid bearing weight on the affected limb; elevate the leg while resting.\n• **Cold Compress**: Apply an ice pack wrapped in a cloth for 15-20 minutes to reduce local swelling.\n• **Joint Care**: Avoid sudden twisting or strenuous weight-bearing activities.";
+        ? "• Pair par zyada bojh ya wazan na dalein. Pair ko uncha rakh kar rest karein.\n• Dard ya sujan wale hisse par 15-20 minute cold/ice pack lagayein."
+        : "• Avoid bearing weight on the affected limb; elevate the leg while resting.\n• Apply an ice pack wrapped in a cloth for 15-20 minutes to reduce local swelling.";
     } else if (category === 'headache') {
       conditionName = lang === 'hindi' ? "सिरदर्द एवं न्यूरो परामर्श" : "Cephalalgia / Migraine Care";
       recommendedDoctorId = "doc_priya";
@@ -1090,10 +1421,10 @@ export class BlessyConversationEngine {
       specialtyTitle = lang === 'hindi' ? "न्यूरोलॉजिस्ट (Suite 302)" : "Consultant Neurologist (Suite 302)";
       feeText = "₹950 ($100)";
       advice = lang === 'hindi'
-        ? "• **विश्राम**: शांत, हल्के अंधेरे कमरे में आराम करें और भरपूर पानी पिएं।\n• **सिकाई**: माथे और गर्दन पर ठंडी पट्टी लगाएं।\n• **स्क्रीन ब्रेक**: मोबाइल और लैपटॉप स्क्रीन से दूरी बनाएं।"
+        ? "• शांत, हल्के अंधेरे कमरे में आराम करें और भरपूर पानी पिएं।\n• माथे और गर्दन पर ठंडी पट्टी लगाएं।"
         : lang === 'hinglish'
-        ? "• **Aaram**: Shant, andhere kamre mein aaram karein aur dehydration se bachein.\n• **Cold Compress**: Maathe aur gardan par halka thanda sek lagayein.\n• **Screen Time**: Mobile/laptop screen turant band karein."
-        : "• **Rest**: Rest in a quiet, dimly lit space and drink plenty of water.\n• **Cold Compress**: Apply a cold gel pack to your forehead or temples.\n• **Digital Break**: Limit screen exposure to reduce optic nerve strain.";
+        ? "• Shant, andhere kamre mein aaram karein aur dehydration se bachein.\n• Maathe aur gardan par halka thanda sek lagayein."
+        : "• Rest in a quiet, dimly lit space and drink plenty of water.\n• Apply a cold gel pack to your forehead or temples.";
     } else if (category === 'respiratory') {
       conditionName = lang === 'hindi' ? "श्वसन एवं फेफड़े संबंधित परामर्श" : "Respiratory & Pulmonary Care";
       recommendedDoctorId = "doc_khan";
@@ -1101,10 +1432,10 @@ export class BlessyConversationEngine {
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ पल्मोनोलॉजिस्ट (Suite 108)" : "Senior Pulmonologist (Suite 108)";
       feeText = "₹850 ($90)";
       advice = lang === 'hindi'
-        ? "• **भाप**: दिन में दो बार गुनगुने पानी की भाप लें।\n• **तरल पदार्थ**: गुनगुना पानी और काढ़ा पिएं, ठंडी चीजों से परहेज करें।"
+        ? "• दिन में दो बार गुनगुने पानी की भाप लें।\n• गुनगुना पानी और काढ़ा पिएं, ठंडी चीजों से परहेज करें।"
         : lang === 'hinglish'
-        ? "• **Steam Inhalation**: Din mein 2 baar gungune paani ki bhaap lein.\n• **Hydration**: Gunguna paani aur herbal kadha piyein, thandi cheezon se bachein."
-        : "• **Steam Inhalation**: Use warm steam inhalation twice daily to soothe bronchial passages.\n• **Warm Fluids**: Maintain regular intake of warm water and avoid chilled drinks.";
+        ? "• Din mein 2 baar gungune paani ki bhaap lein.\n• Gunguna paani aur herbal kadha piyein, thandi cheezon se bachein."
+        : "• Use warm steam inhalation twice daily to soothe bronchial passages.\n• Maintain regular intake of warm water and avoid chilled drinks.";
     } else if (category === 'fever') {
       conditionName = lang === 'hindi' ? "वायरल बुखार एवं सामान्य चिकित्सा" : "Viral Infection & Pyrexia";
       recommendedDoctorId = "doc_vance";
@@ -1112,10 +1443,10 @@ export class BlessyConversationEngine {
       specialtyTitle = lang === 'hindi' ? "वरिष्ठ डायग्नोस्टिशियन (Suite 204)" : "Senior Diagnostician & Internist (Suite 204)";
       feeText = "₹750 ($80)";
       advice = lang === 'hindi'
-        ? "• **हाइड्रेशन**: ओआरएस, गुनगुना पानी और सूप पिएं।\n• **पट्टियां**: सामान्य पानी की पट्टी माथे पर रखें।\n• **आराम**: पूरा शारीरिक आराम करें।"
+        ? "• ओआरएस, गुनगुना पानी और सूप पिएं।\n• सामान्य पानी की पट्टी माथे पर रखें।"
         : lang === 'hinglish'
-        ? "• **Hydration**: Prachur matra mein ORS, gunguna paani aur soup piyein.\n• **Temperature**: Normal paani ki patti maathe par rakhein.\n• **Rest**: Complete bed rest karein."
-        : "• **Hydration**: Maintain high fluid intake (electrolyte water, warm broth, herbal tea).\n• **Tepid Sponge**: Use lukewarm sponge baths to manage fever spikes.\n• **Rest**: Complete physical rest to support immune recovery.";
+        ? "• Prachur matra mein ORS, gunguna paani aur soup piyein.\n• Normal paani ki patti maathe par rakhein."
+        : "• Maintain high fluid intake (electrolyte water, warm broth, herbal tea).\n• Use lukewarm sponge baths to manage fever spikes.";
     } else {
       conditionName = lang === 'hindi' ? "सामान्य स्वास्थ्य परामर्श" : "General Health Consultation";
       recommendedDoctorId = "doc_akhilesh";
@@ -1123,10 +1454,10 @@ export class BlessyConversationEngine {
       specialtyTitle = lang === 'hindi' ? "प्रमुख क्लिनिकल कंसल्टेंट (Suite 101)" : "Chief Medical Consultant (Suite 101)";
       feeText = "₹800 ($85)";
       advice = lang === 'hindi'
-        ? "• पर्याप्त विश्राम करें और खुद को हाइड्रेटेड रखें।\n• लक्षणों का समय और स्थिति नोट करें।"
+        ? "• पर्याप्त विश्राम करें और खुद को हाइड्रेटेड रखें।"
         : lang === 'hinglish'
-        ? "• Paryaapt vishram karein aur hydrate rahein.\n• Lakshan kab badh rahe hain unka samay note karein."
-        : "• Ensure adequate restorative rest and hydration.\n• Keep a brief log of symptoms for your consultation.";
+        ? "• Paryaapt vishram karein aur hydrate rahein."
+        : "• Ensure adequate restorative rest and hydration.";
     }
 
     this.session.doctorId = recommendedDoctorId;
@@ -1137,12 +1468,12 @@ export class BlessyConversationEngine {
       return {
         type: 'symptom_recommendation',
         data: { conditionName, specialistName, recommendedDoctorId },
-        message: `💡 **क्लिनिकल सुझाव: ${conditionName}**\n\n${advice}\n\n🩺 **अनुशंसित विशेषज्ञ**: इस समस्या के लिए हमारे **${specialistName}** (${specialtyTitle}) सबसे उपयुक्त हैं।\n• **परामर्श शुल्क**: ${feeText}\n\n🕒 **उपलब्ध समय (कल)**:\n• सुबह 11:30 AM\n• दोपहर/शाम 04:00 PM (4 बजे)\n• शाम 06:00 PM (6 बजे)\n• शाम 06:30 PM (6:30 बजे)\n\n👉 **आप किस समय का स्लॉट बुक करना चाहेंगे?** (आप *'4 बजे'*, *'6 बजे'*, या *'6:30 बजे'* चुन सकते हैं):`,
+        message: `💡 **क्लिनिकल सुझाव: ${conditionName}**\n\n${advice}\n\n> ℹ️ *इन लक्षणों के कई अलग-अलग कारण हो सकते हैं। एक डॉक्टर इसकी सही जांच कर सकते हैं।*\n\n🩺 **अनुशंसित विशेषज्ञ**: इस समस्या के लिए हमारे **${specialistName}** (${specialtyTitle}) उपयुक्त रहेंगे।\n• **परामर्श शुल्क**: ${feeText}\n\n👉 **क्या मैं ${specialistName.split(',')[0]} के साथ (जैसे: कल 04:00 PM या 06:00 PM) आपका अपॉइंटमेंट स्लॉट देखूँ?**`,
         actionChips: [
           { label: `✅ ${specialistName.split(',')[0]} के साथ बुक करें`, action: `select_doctor_${recommendedDoctorId}` },
+          { label: '⏱️ कल 11:30 AM', action: 'confirm_time_11:30' },
           { label: '⏱️ कल 04:00 PM', action: 'confirm_time_16:00' },
           { label: '⏱️ कल 06:00 PM', action: 'confirm_time_18:00' },
-          { label: '⏱️ कल 06:30 PM', action: 'confirm_time_18:30' },
           { label: '👀 सभी डॉक्टर देखें', action: 'show_doctors' }
         ]
       };
@@ -1152,12 +1483,12 @@ export class BlessyConversationEngine {
       return {
         type: 'symptom_recommendation',
         data: { conditionName, specialistName, recommendedDoctorId },
-        message: `💡 **Clinical Sujhav: ${conditionName}**\n\n${advice}\n\n🩺 **Recommended Specialist**: Is takleef ke liye hamare **${specialistName}** (${specialtyTitle}) sabse upyukt hain.\n• **Consultation Fee**: ${feeText}\n\n🕒 **Available Slots (Kal / Tomorrow)**:\n• Subah 11:30 AM\n• Shaam 04:00 PM (4 baje)\n• Shaam 06:00 PM (6 baje)\n• Shaam 06:30 PM (6:30 baje)\n\n👉 **Aap kaunsa time prefer karenge?** (Aap *'4 baje'*, *'6 baje'*, ya *'6:30 baje'* bol sakte hain):`,
+        message: `💡 **Clinical Sujhav: ${conditionName}**\n\n${advice}\n\n> ℹ️ *In symptoms ke alag-alag causes ho sakte hain. Ek doctor iski proper jaanch kar sakte hain.*\n\n🩺 **Recommended Specialist**: Is takleef ke liye hamare **${specialistName}** (${specialtyTitle}) upyukt rahenge.\n• **Consultation Fee**: ${feeText}\n\n👉 **Kya main ${specialistName.split(',')[0]} ke saath (jaise: kal 04:00 PM ya 06:00 PM) appointment slot check karoon?**`,
         actionChips: [
           { label: `✅ Book with ${specialistName.split(',')[0]}`, action: `select_doctor_${recommendedDoctorId}` },
+          { label: '⏱️ Kal 11:30 AM', action: 'confirm_time_11:30' },
           { label: '⏱️ Kal 04:00 PM', action: 'confirm_time_16:00' },
           { label: '⏱️ Kal 06:00 PM', action: 'confirm_time_18:00' },
-          { label: '⏱️ Kal 06:30 PM', action: 'confirm_time_18:30' },
           { label: '👀 Sabhi Doctors Dekhein', action: 'show_doctors' }
         ]
       };
@@ -1166,12 +1497,12 @@ export class BlessyConversationEngine {
     return {
       type: 'symptom_recommendation',
       data: { conditionName, specialistName, recommendedDoctorId },
-      message: `💡 **Clinical Care Guidance: ${conditionName}**\n\n${advice}\n\n🩺 **Recommended Specialist**: For these symptoms, we recommend consulting **${specialistName}** (${specialtyTitle}).\n• **Consultation Fee**: ${feeText}\n\n🕒 **Available Slots (Tomorrow)**:\n• Morning 11:30 AM\n• Evening 04:00 PM (4 PM)\n• Evening 06:00 PM (6 PM)\n• Evening 06:30 PM (6:30 PM)\n\n👉 **What time slot works best for you?** (You can say *'4 PM'*, *'6 PM'*, or *'6:30 PM'*):`,
+      message: `💡 **Clinical Care Guidance: ${conditionName}**\n\n${advice}\n\n> ℹ️ *These symptoms can have different causes. A doctor can evaluate you properly.*\n\n🩺 **Recommended Specialist**: For these symptoms, we recommend consulting **${specialistName}** (${specialtyTitle}).\n• **Consultation Fee**: ${feeText}\n\n👉 **Would you like me to check an available consultation slot with ${specialistName.split(',')[0]} (e.g. tomorrow at 04:00 PM or 06:00 PM)?**`,
       actionChips: [
         { label: `✅ Book with ${specialistName.split(',')[0]}`, action: `select_doctor_${recommendedDoctorId}` },
+        { label: '⏱️ Tomorrow 11:30 AM', action: 'confirm_time_11:30' },
         { label: '⏱️ Tomorrow 04:00 PM', action: 'confirm_time_16:00' },
         { label: '⏱️ Tomorrow 06:00 PM', action: 'confirm_time_18:00' },
-        { label: '⏱️ Tomorrow 06:30 PM', action: 'confirm_time_18:30' },
         { label: '👀 View All Doctors', action: 'show_doctors' }
       ]
     };
@@ -1227,6 +1558,7 @@ export class BlessyConversationEngine {
     else if (text.includes('priya') || text.includes('neuro') || text.includes('doc_priya') || text.includes('प्रिया')) docId = 'doc_priya';
     else if (text.includes('khan') || text.includes('pulmo') || text.includes('doc_khan') || text.includes('खान')) docId = 'doc_khan';
     else if (text.includes('vance') || text.includes('doc_vance')) docId = 'doc_vance';
+    else if (text.includes('ananya') || text.includes('derma') || text.includes('skin') || text.includes('doc_ananya') || text.includes('अनन्या')) docId = 'doc_ananya';
     else if (text.includes('akhilesh') || text.includes('cardio') || text.includes('doc_akhilesh') || text.includes('अखिलेश')) docId = 'doc_akhilesh';
 
     const doctor = storageService.getDoctorById(docId) || storageService.getDoctorById('doc_akhilesh');
@@ -1486,6 +1818,7 @@ export class BlessyConversationEngine {
     else if (text.includes('akhilesh') || text.includes('अखिलेश')) targetDocId = 'doc_akhilesh';
     else if (text.includes('vance')) targetDocId = 'doc_vance';
     else if (text.includes('khan') || text.includes('खान')) targetDocId = 'doc_khan';
+    else if (text.includes('ananya') || text.includes('अनन्या')) targetDocId = 'doc_ananya';
     const activeDoc = targetDocId ? storageService.getDoctorById(targetDocId) : null;
 
     let specificDocMsg = '';
@@ -2060,16 +2393,70 @@ export class BlessyConversationEngine {
     };
   }
 
+  isHospitalLocationQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    const hospitalTerms = [
+      'indore', 'इंदौर', 'mumbai', 'मुंबई', 'delhi', 'दिल्ली',
+      'hospital', 'hospitals', 'aspataal', 'aspatal', 'अस्पताल', 'clinic', 'clinics'
+    ];
+    return hospitalTerms.some(term => lower.includes(term));
+  }
+
+  isSpecialtyDoctorQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    const specialtyDoctorPatterns = [
+      'ke liye doctor', 'ke liye kaunsa doctor', 'ke liye konsa doctor', 'ke liye specialist',
+      'doctor for', 'specialist for', 'which doctor for', 'doctor chahiye for',
+      'dermatol', 'cardiolog', 'neurolog', 'orthopedic', 'pulmonolog', 'gastroenterolog',
+      'skin ka doctor', 'skin ki doctor', 'skin ke doctor', 'skin doctor', 'skin specialist',
+      'pet ka doctor', 'pet ke doctor', 'pet doctor', 'stomach doctor',
+      'haddi ka doctor', 'haddi ke doctor', 'bone doctor', 'joint doctor', 'ortho doctor',
+      'sar dard doctor', 'headache doctor', 'neuro doctor',
+      'khansi doctor', 'cough doctor', 'lung doctor', 'chest doctor',
+      'त्वचा विशेषज्ञ', 'हड्डी के डॉक्टर', 'पेट के डॉक्टर', 'चर्म रोग'
+    ];
+    return specialtyDoctorPatterns.some(pattern => lower.includes(pattern));
+  }
+
+  isDoctorSearchQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    const doctorSearchPhrases = [
+      'need a doctor', 'need doctor', 'want a doctor', 'see a doctor', 'which doctor',
+      'doctor should i see', 'recommend a doctor', 'suggest a doctor', 'doctor suggest',
+      'doctor suggestion', 'find a doctor', 'find doctor', 'choose a doctor',
+      'want to choose a doctor', 'get a doctor',
+      'doctor chahiye', 'doctor chahie', 'ek doctor chahiye', 'doctor ki zaroorat',
+      'doctor ki jarurat', 'kis doctor', 'konsa doctor', 'kaunsa doctor',
+      'doctor recommend', 'doctor batao', 'doctor batayein', 'doctor choose',
+      'doctor dekhna hai', 'doctor se milna', 'doctor dikhana', 'kis doctor ko dikhana',
+      'doctor ki help',
+      'डॉक्टर चाहिए', 'किस डॉक्टर', 'कौन सा डॉक्टर', 'डॉक्टर की जरूरत', 'डॉक्टर बताओ',
+      'डॉक्टर चुनना', 'डॉक्टर देखना'
+    ];
+    return doctorSearchPhrases.some(phrase => lower.includes(phrase));
+  }
+
   isMedicalSymptomQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
     const medicalTerms = [
-      'dard', 'pain', 'bukhar', 'fever', 'headache', 'sar dard', 'sar me dard',
+      'dard', 'pain', 'bukhar', 'fever', 'headache', 'sar dard', 'sar me dard', 'sir dard',
       'pet dard', 'stomach', 'pet me dard', 'vomiting', 'ulti', 'nausea', 'cough', 'khansi',
       'cold', 'jukaam', 'gale me', 'throat', 'back pain', 'kamar dard', 'joint', 'knee',
       'ghutne', 'rash', 'khujli', 'skin', 'acidity', 'gas', 'dizziness', 'chakkar', 'chot',
       'pair', 'pairon', 'taang', 'leg', 'legs', 'feet', 'foot', 'ankle', 'haddi', 'bone',
-      'sprain', 'ortho', 'sujan', 'muscle'
+      'sprain', 'ortho', 'sujan', 'muscle', 'allergy', 'allergies', 'itching', 'daane',
+      'not feeling well', 'feeling unwell', 'sick', 'health problem', 'health issue',
+      'wrong with', 'my health', 'health', 'unwell',
+      'tabiyat', 'tabiyat kharab', 'theek nahi', 'thik nahi', 'takleef', 'bimari', 'bimaar',
+      'lakshan', 'symptom', 'symptoms', 'what is wrong', "what's wrong", 'tell you my problem',
+      'apni problem', 'having some issues', 'kya hua hai',
+      'तबीयत', 'बुखार', 'दर्द', 'एलर्जी', 'त्वचा', 'खांसी', 'जुकाम', 'लक्षण', 'बीमार', 'तकलीफ'
     ];
-    return medicalTerms.some(term => text.includes(term));
+    return medicalTerms.some(term => lower.includes(term));
   }
 
   parseTime(text) {

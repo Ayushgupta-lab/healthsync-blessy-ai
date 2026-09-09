@@ -209,6 +209,66 @@ export const DEFAULT_DOCTORS = [
         { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Lunch" }
       ]
     }
+  },
+  {
+    id: "doc_ananya",
+    name: "Dr. Ananya Roy, MD",
+    title: "Senior Consultant Dermatologist & Cosmetologist",
+    specialty: "Dermatology & Skin Care",
+    experience: "11+ years",
+    rating: 4.95,
+    reviewsCount: 310,
+    avatar: "👩‍⚕️",
+    photoUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
+    badgeColor: "#0D9488",
+    bio: "Specializing in clinical dermatology, skin allergies, acne, eczema, fungal infections, and aesthetic medicine.",
+    consultationFee: "₹850 ($90)",
+    feeAmount: 850,
+    hospital: "HealthSync Super-Specialty Hospital",
+    city: "Indore",
+    roomNumber: "Suite 105 - Dermatology Wing",
+    status: "available",
+    statusNote: "Consulting patients in OPD",
+    runningDelayMinutes: 0,
+    activeSurgery: null,
+    leaves: [],
+    routine: {
+      workStart: "09:00",
+      workEnd: "20:30",
+      slotDurationMinutes: 30,
+      bufferMinutes: 5,
+      breaks: [
+        { id: "sleep_hours", name: "Night Sleep", startTime: "21:00", endTime: "09:00", type: "sleep", description: "Off duty" },
+        { id: "lunch_break", name: "Lunch Break", startTime: "13:00", endTime: "14:00", type: "lunch", description: "Lunch" }
+      ]
+    }
+  }
+];
+
+export const REGISTERED_HOSPITALS = [
+  {
+    id: "hosp_indore",
+    name: "HealthSync Super-Specialty Hospital & Research Institute",
+    city: "Indore",
+    address: "Vijay Nagar, AB Road, Indore, Madhya Pradesh",
+    rating: 4.9,
+    reviewsCount: 1240,
+    specialties: ["Dermatology & Skin Care", "Cardiology", "Orthopedics & Joint Care", "General Medicine"],
+    doctors: ["doc_ananya", "doc_akhilesh", "doc_patel"],
+    phone: "+91 731 450-8000",
+    emergencyNumber: "108 / +91 731 450-8911"
+  },
+  {
+    id: "hosp_apex_mumbai",
+    name: "HealthSync Apex Heart & Diagnostic Institute",
+    city: "Mumbai",
+    address: "Bandra Kurla Complex, Mumbai, Maharashtra",
+    rating: 4.95,
+    reviewsCount: 2100,
+    specialties: ["Cardiology", "Neurology", "Internal Medicine", "Pulmonology"],
+    doctors: ["doc_akhilesh", "doc_priya", "doc_vance", "doc_khan"],
+    phone: "+91 22 6600-4000",
+    emergencyNumber: "108 / +91 22 6600-4911"
   }
 ];
 
@@ -418,6 +478,29 @@ class StorageService {
     } catch {
       return null;
     }
+  }
+
+  getHospitals() {
+    return REGISTERED_HOSPITALS;
+  }
+
+  getHospitalsByLocation(city) {
+    if (!city) return REGISTERED_HOSPITALS;
+    const cleanCity = String(city).toLowerCase().trim();
+    return REGISTERED_HOSPITALS.filter(h =>
+      h.city.toLowerCase().includes(cleanCity) ||
+      cleanCity.includes(h.city.toLowerCase()) ||
+      h.address.toLowerCase().includes(cleanCity)
+    );
+  }
+
+  getDoctorsBySpecialty(specialty) {
+    if (!specialty) return this.getDoctors();
+    const clean = String(specialty).toLowerCase().trim();
+    return this.getDoctors().filter(d =>
+      d.specialty.toLowerCase().includes(clean) ||
+      clean.includes(d.specialty.toLowerCase())
+    );
   }
 
   resetDemoData() {
