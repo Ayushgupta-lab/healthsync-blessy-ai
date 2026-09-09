@@ -437,6 +437,31 @@ export async function handleApiRequest(req, res, parsedUrl) {
       return sendJson(200, { success: true, stats: updatedStats });
     }
 
+    // -------------------------------------------------------------
+    // PATIENT CLINICAL MEMORY (ChatGPT & Gemini Like Memory Bank)
+    // -------------------------------------------------------------
+    if (pathname === '/api/patient/memory') {
+      const auth = authController.requireAuth(token);
+      const effectiveUserId = auth.authorized ? auth.user.id : (parsedUrl.searchParams.get('userId') || 'demo_patient_default');
+
+      if (method === 'GET') {
+        const memory = db.getPatientMemory(effectiveUserId) || {
+          userId: effectiveUserId,
+          profile: { name: 'Alex Morgan', preferredCity: 'Indore', preferredLanguage: 'english' },
+          chronicConditions: [],
+          allergies: [],
+          symptomHistory: []
+        };
+        return sendJson(200, { memory });
+      }
+
+      if (method === 'POST') {
+        const body = await readBody();
+        const saved = db.savePatientMemory(body.userId || effectiveUserId, body.memory || body);
+        return sendJson(200, { success: true, memory: saved });
+      }
+    }
+
     // Unknown API route
     return sendJson(404, { error: `Endpoint not found: ${pathname}` });
 

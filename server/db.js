@@ -540,6 +540,7 @@ class HealthSyncDatabase {
       passwordResets: [],
       emergencyReports: [],
       notifications: initialNotifications,
+      patientMemories: [],
       conversations: [
         {
           id: "conv_01",
@@ -648,6 +649,29 @@ class HealthSyncDatabase {
     }
     this.saveDatabase();
     return this.getProfileByUserId(profileObj.userId);
+  }
+
+  // --- Patient Clinical Memory Bank (Like ChatGPT & Gemini) ---
+  getPatientMemory(userId) {
+    if (!this.data.patientMemories) this.data.patientMemories = [];
+    return this.data.patientMemories.find(m => m.userId === userId) || null;
+  }
+
+  savePatientMemory(userId, memoryObj) {
+    if (!this.data.patientMemories) this.data.patientMemories = [];
+    const idx = this.data.patientMemories.findIndex(m => m.userId === userId);
+    const updated = {
+      userId,
+      ...memoryObj,
+      updatedAt: new Date().toISOString()
+    };
+    if (idx !== -1) {
+      this.data.patientMemories[idx] = { ...this.data.patientMemories[idx], ...updated };
+    } else {
+      this.data.patientMemories.push(updated);
+    }
+    this.saveDatabase();
+    return updated;
   }
 
   // --- Session Management ---

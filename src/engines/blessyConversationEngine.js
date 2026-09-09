@@ -3,6 +3,8 @@ import { clinicalTools } from '../services/clinicalTools.js';
 import { storageService } from '../services/storageService.js';
 import { formatTime12 } from '../services/scheduleEngine.js';
 import { blessyLearningEngine } from './blessyLearningEngine.js';
+import { blessyMemoryEngine } from './blessyMemoryEngine.js';
+import { blessyCognitiveBrain } from './blessyCognitiveBrain.js';
 
 export class BlessyConversationEngine {
   constructor() {
@@ -269,6 +271,10 @@ export class BlessyConversationEngine {
       // Record history
       this.session.history.push({ role: 'user', text: rawText, timestamp: Date.now() });
 
+      // Dynamic Patient Memory Extraction (Like ChatGPT & Gemini memory bank)
+      const userId = this.session.user?.id || 'demo_patient_default';
+      blessyMemoryEngine.extractAndStoreFacts(userId, cleanText);
+
       const response = this.routeMessage(text, lang);
       if (response && typeof response === 'object') {
         response.detectedLanguage = (lang === 'english') ? 'english' : 'hindi';
@@ -325,6 +331,22 @@ export class BlessyConversationEngine {
       /(behosh|unconscious|fainted|chot.*khoon)/i.test(text)
     ) {
       return this.handleEmergency(text, 'acute emergency symptom', lang);
+    }
+
+    // -------------------------------------------------------------
+    // 0A. Memory Recall Query (ChatGPT & Gemini Like Memory Bank)
+    // -------------------------------------------------------------
+    const activeUserId = this.session.user?.id || 'demo_patient_default';
+    if (blessyMemoryEngine.isMemoryRecallQuery(text)) {
+      return blessyMemoryEngine.handleMemoryRecall(activeUserId, text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 0AA. Cognitive Medical Knowledge & Reasoning (Why/How/Home Care)
+    // -------------------------------------------------------------
+    if (blessyCognitiveBrain.isMedicalCognitiveQuery(text)) {
+      const memory = blessyMemoryEngine.getPatientMemory(activeUserId);
+      return blessyCognitiveBrain.answerMedicalQuery(text, lang, memory);
     }
 
     // -------------------------------------------------------------
@@ -1207,6 +1229,22 @@ export class BlessyConversationEngine {
     if (this.session.state === 'AWAITING_SYMPTOM_DETAILS' && isDurationResponse) {
       this.session.symptoms.duration = text;
       this.session.state = 'SELECTING_DOCTOR';
+
+      // If message also introduces a specific new symptom, update category
+      if (lower.includes('ghutne') || lower.includes('pair') || lower.includes('leg') || lower.includes('joint') || lower.includes('haddi') || lower.includes('ortho')) {
+        this.session.symptoms.category = 'ortho';
+      } else if (lower.includes('sar') || lower.includes('sir') || lower.includes('head') || lower.includes('migraine')) {
+        this.session.symptoms.category = 'headache';
+      } else if (lower.includes('pet') || lower.includes('stomach') || lower.includes('acidity')) {
+        this.session.symptoms.category = 'stomach';
+      } else if (lower.includes('skin') || lower.includes('allergy') || lower.includes('rash')) {
+        this.session.symptoms.category = 'skin';
+      } else if (lower.includes('cough') || lower.includes('khansi') || lower.includes('saans')) {
+        this.session.symptoms.category = 'respiratory';
+      } else if (lower.includes('fever') || lower.includes('bukhar')) {
+        this.session.symptoms.category = 'fever';
+      }
+
       const category = this.session.symptoms.category || 'general';
       return this.provideSymptomRecommendation(category, lang);
     }
@@ -1464,11 +1502,14 @@ export class BlessyConversationEngine {
     this.session.doctorName = specialistName;
     this.session.state = 'SELECTING_DATE_TIME';
 
+    const activeUserId = this.session.user?.id || 'demo_patient_default';
+    const memoryNote = blessyMemoryEngine.getProactiveContext(activeUserId, lang);
+
     if (lang === 'hindi') {
       return {
         type: 'symptom_recommendation',
         data: { conditionName, specialistName, recommendedDoctorId },
-        message: `💡 **क्लिनिकल सुझाव: ${conditionName}**\n\n${advice}\n\n> ℹ️ *इन लक्षणों के कई अलग-अलग कारण हो सकते हैं। एक डॉक्टर इसकी सही जांच कर सकते हैं।*\n\n🩺 **अनुशंसित विशेषज्ञ**: इस समस्या के लिए हमारे **${specialistName}** (${specialtyTitle}) उपयुक्त रहेंगे।\n• **परामर्श शुल्क**: ${feeText}\n\n👉 **क्या मैं ${specialistName.split(',')[0]} के साथ (जैसे: कल 04:00 PM या 06:00 PM) आपका अपॉइंटमेंट स्लॉट देखूँ?**`,
+        message: `💡 **क्लिनिकल सुझाव: ${conditionName}**\n\n${advice}\n\n> ℹ️ *इन लक्षणों के कई अलग-अलग कारण हो सकते हैं। एक डॉक्टर इसकी सही जांच कर सकते हैं।*${memoryNote}\n\n🩺 **अनुशंसित विशेषज्ञ**: इस समस्या के लिए हमारे **${specialistName}** (${specialtyTitle}) उपयुक्त रहेंगे।\n• **परामर्श शुल्क**: ${feeText}\n\n👉 **क्या मैं ${specialistName.split(',')[0]} के साथ (जैसे: कल 04:00 PM या 06:00 PM) आपका अपॉइंटमेंट स्लॉट देखूँ?**`,
         actionChips: [
           { label: `✅ ${specialistName.split(',')[0]} के साथ बुक करें`, action: `select_doctor_${recommendedDoctorId}` },
           { label: '⏱️ कल 11:30 AM', action: 'confirm_time_11:30' },
@@ -1483,7 +1524,7 @@ export class BlessyConversationEngine {
       return {
         type: 'symptom_recommendation',
         data: { conditionName, specialistName, recommendedDoctorId },
-        message: `💡 **Clinical Sujhav: ${conditionName}**\n\n${advice}\n\n> ℹ️ *In symptoms ke alag-alag causes ho sakte hain. Ek doctor iski proper jaanch kar sakte hain.*\n\n🩺 **Recommended Specialist**: Is takleef ke liye hamare **${specialistName}** (${specialtyTitle}) upyukt rahenge.\n• **Consultation Fee**: ${feeText}\n\n👉 **Kya main ${specialistName.split(',')[0]} ke saath (jaise: kal 04:00 PM ya 06:00 PM) appointment slot check karoon?**`,
+        message: `💡 **Clinical Sujhav: ${conditionName}**\n\n${advice}\n\n> ℹ️ *In symptoms ke alag-alag causes ho sakte hain. Ek doctor iski proper jaanch kar sakte hain.*${memoryNote}\n\n🩺 **Recommended Specialist**: Is takleef ke liye hamare **${specialistName}** (${specialtyTitle}) upyukt rahenge.\n• **Consultation Fee**: ${feeText}\n\n👉 **Kya main ${specialistName.split(',')[0]} ke saath (jaise: kal 04:00 PM ya 06:00 PM) appointment slot check karoon?**`,
         actionChips: [
           { label: `✅ Book with ${specialistName.split(',')[0]}`, action: `select_doctor_${recommendedDoctorId}` },
           { label: '⏱️ Kal 11:30 AM', action: 'confirm_time_11:30' },
@@ -1497,7 +1538,7 @@ export class BlessyConversationEngine {
     return {
       type: 'symptom_recommendation',
       data: { conditionName, specialistName, recommendedDoctorId },
-      message: `💡 **Clinical Care Guidance: ${conditionName}**\n\n${advice}\n\n> ℹ️ *These symptoms can have different causes. A doctor can evaluate you properly.*\n\n🩺 **Recommended Specialist**: For these symptoms, we recommend consulting **${specialistName}** (${specialtyTitle}).\n• **Consultation Fee**: ${feeText}\n\n👉 **Would you like me to check an available consultation slot with ${specialistName.split(',')[0]} (e.g. tomorrow at 04:00 PM or 06:00 PM)?**`,
+      message: `💡 **Clinical Care Guidance: ${conditionName}**\n\n${advice}\n\n> ℹ️ *These symptoms can have different causes. A doctor can evaluate you properly.*${memoryNote}\n\n🩺 **Recommended Specialist**: For these symptoms, we recommend consulting **${specialistName}** (${specialtyTitle}).\n• **Consultation Fee**: ${feeText}\n\n👉 **Would you like me to check an available consultation slot with ${specialistName.split(',')[0]} (e.g. tomorrow at 04:00 PM or 06:00 PM)?**`,
       actionChips: [
         { label: `✅ Book with ${specialistName.split(',')[0]}`, action: `select_doctor_${recommendedDoctorId}` },
         { label: '⏱️ Tomorrow 11:30 AM', action: 'confirm_time_11:30' },
