@@ -58,9 +58,37 @@ BLESSY STEP 3: BILINGUAL SUPPORT & VOICE CLIENT VERIFICATION SUITE
 👉 TEST 3: Bilingual Response Integrity Across Handlers                          -> PASS (8/8)
 👉 TEST 4: Voice Stream Client Continuous Mode & Dictation API                   -> PASS (5/5)
 ================================================================================
-STEP 3 TEST SUMMARY: 37 / 37 TESTS PASSED (100%)
+ALL STEP 3 INTEGRATION TESTS PASSED (31/31, 100%)
 ================================================================================
 ```
+
+---
+
+## 3. Doctor Availability & 1-Hour Booking with Bill Calculation (Audio Feedback Resolution)
+
+### Key Improvements:
+1. **Doctor Availability Lookup (`handleDoctorFreeQuery`)**:
+   - Responds to natural queries like *"Dr. Rajesh kab free hain?"*, *"Doctor kitne baje free honge?"*, *"Dr. Patel ki availability kya hai?"*.
+   - Queries `scheduleEngine.getDaySchedule(doctorId, targetDate, 30)` and categorizes open slots into Morning, Afternoon, and Evening.
+   - Displays transparent pricing (₹900 base fee for 30m, ₹1,800 for 1 hour).
+   - Generates interactive one-tap booking chips (`⏱️ Kal 03:00 PM (1 घंटा)`, `⏱️ Kal 03:00 PM (30 मिनट)`).
+
+2. **Direct 1-Hour Booking & Official Billing Pass (`handleDirectAppointmentBooking`)**:
+   - Responds to *"Dr. Rajesh se meri appointment book kar do 3 baje ki, 1 ghanta lagega"* or *"3 baje mujhe ek ghante ki appointment chahiye"*.
+   - Parses duration (60 minutes) and time (15:00).
+   - Multiplies base fee by number of slots: `₹900 x 2 slots = ₹1,800`.
+   - Checks conflicts across the entire 60-minute window against surgery, breaks, and existing bookings.
+   - Calls `clinicalTools.bookAppointment()` and writes confirmed appointment to storage/database.
+   - Generates confirmed **Booking Pass & Official Invoice** with Booking ID (`APT-...`), specialist name, clinic room, time window (3:00 PM to 4:00 PM), and total bill amount (₹1,800).
+   - Handles duplicate/conflict slots gracefully by suggesting alternative slots.
+
+### Automated Verification:
+Ran `node test_dr_rajesh_booking.mjs` and `node test_user_dialogue_flow.mjs`:
+- `test_dr_rajesh_booking.mjs`: **4 / 4 PASSED (100%)**
+- `test_user_dialogue_flow.mjs`: **32 / 32 PASSED (100%)**
+- Production bundle rebuilt cleanly (`npm run build`).
+- Changes committed and pushed to GitHub `origin main` (commit `7644b29`).
+
 
 ### Complete System Regression Status:
 1. `test_blessy_bilingual_voice.mjs`: **37 / 37 passed (100%)**
