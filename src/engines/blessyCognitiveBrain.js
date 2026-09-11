@@ -38,8 +38,11 @@ export class BlessyCognitiveBrain {
     return isCausal || isRemedy || isConcept;
   }
 
-  // Live Generative AI Medical Reasoning via OpenRouter & GPT-4o-mini Backend
+  // Live Generative AI Medical Reasoning via OpenRouter & GPT-4o-mini Backend (with direct browser fallback)
   async answerMedicalQueryLive(text, langParam = 'english', patientMemory = null) {
+    const isHindi = langParam === 'hindi' || langParam === 'hinglish';
+
+    // 1. Try local backend server first (/api/ai/chat)
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -57,7 +60,6 @@ export class BlessyCognitiveBrain {
       if (response.ok) {
         const data = await response.json();
         if (data && data.message) {
-          const isHindi = langParam === 'hindi';
           return {
             type: 'cognitive_medical_answer',
             category: 'generative_ai',
@@ -76,10 +78,51 @@ export class BlessyCognitiveBrain {
         }
       }
     } catch (err) {
-      console.warn("Live AI chat fallback to local knowledge base:", err.message);
+      console.warn("Local /api/ai/chat failed, attempting port 3000 backend...", err.message);
     }
 
-    // High-resilience fallback to local clinical knowledge
+    // 2. Cross-origin backend fallback (if user opened via Vite :5173 or Live Server :5500)
+    try {
+      if (typeof window !== 'undefined' && window.location.port !== '3000') {
+        const fallbackRes = await fetch('http://localhost:3000/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: text,
+            language: langParam,
+            context: {
+              patientName: patientMemory?.profile?.name || '',
+              conditions: patientMemory?.chronicConditions || []
+            }
+          })
+        });
+
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          if (data && data.message) {
+            return {
+              type: 'cognitive_medical_answer',
+              category: 'generative_ai',
+              modelUsed: data.modelUsed || 'openai/gpt-4o-mini',
+              message: data.message,
+              actionChips: isHindi ? [
+                { label: '🩺 डॉक्टर सूची देखें', action: 'show_doctors' },
+                { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' },
+                { label: '👨‍⚕️ डॉ. अखिलेश शर्मा (MD)', action: 'select_doctor_doc_akhilesh' }
+              ] : [
+                { label: '🩺 Show Available Doctors', action: 'show_doctors' },
+                { label: '📅 Book Appointment', action: 'book_appointment' },
+                { label: '👨‍⚕️ Dr. Akhilesh Sharma (MD)', action: 'select_doctor_doc_akhilesh' }
+              ]
+            };
+          }
+        }
+      }
+    } catch (crossErr) {
+      console.warn("Backend port 3000 check failed:", crossErr.message);
+    }
+
+    // 3. High-resilience fallback to local knowledge base
     return this.answerMedicalQuery(text, langParam, patientMemory);
   }
 

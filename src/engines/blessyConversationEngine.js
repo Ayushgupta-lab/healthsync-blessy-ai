@@ -267,25 +267,27 @@ export class BlessyConversationEngine {
       const lang = this.resolveLang(rawText);
       const activeUserId = this.session.user?.id || 'demo_patient_default';
 
-      // Emergency keywords check first
+      // 1. Emergency keywords check first (immediate safety interrupt)
       for (const kw of this.emergencyKeywords) {
         if (text.includes(kw)) {
           return this.processMessage(rawInput, attachment);
         }
       }
 
-      // Check if user is asking a clinical query, symptom question or advice
-      const isCognitive = blessyCognitiveBrain.isMedicalCognitiveQuery(text) ||
-        text.includes('kya karu') || text.includes('kya kare') || text.includes('batao') ||
-        text.includes('batayein') || text.includes('what to do') || text.includes('how to') ||
-        text.includes('remedy') || text.includes('medicine') || text.includes('dawa') ||
-        text.includes('fees') || text.includes('doctor') || text.includes('akhilesh') ||
-        text.includes('bukhar') || text.includes('sar dard') || text.includes('pain');
+      // 2. Identify pure system button clicks / DB actions
+      const isDirectAction = text.startsWith('confirm_') || 
+                             text.startsWith('select_doctor_') || 
+                             text.startsWith('block_') || 
+                             text.startsWith('shift_') ||
+                             text.startsWith('action_') ||
+                             text === 'show_doctors' || 
+                             text === 'book_appointment';
 
-      if (isCognitive && !text.startsWith('confirm_') && !text.startsWith('select_doctor_')) {
+      // 3. Send all conversational queries, symptoms, health questions, and chat to Live GPT-4o-mini!
+      if (!isDirectAction) {
         const memory = blessyMemoryEngine.getPatientMemory(activeUserId);
         const liveAiResponse = await blessyCognitiveBrain.answerMedicalQueryLive(cleanText, lang, memory);
-        if (liveAiResponse && liveAiResponse.category === 'generative_ai') {
+        if (liveAiResponse && liveAiResponse.message) {
           liveAiResponse.detectedLanguage = (lang === 'english') ? 'english' : 'hindi';
           this.session.history.push({ role: 'assistant', text: liveAiResponse.message, timestamp: Date.now() });
           return liveAiResponse;

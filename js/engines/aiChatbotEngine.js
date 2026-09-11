@@ -140,7 +140,52 @@ export class AIChatbotEngine {
         }
       }
     } catch (err) {
-      console.warn("Live AI chat unavailable, using deterministic engine:", err.message);
+      console.warn("Local /api/ai/chat failed, attempting port 3000 backend...", err.message);
+    }
+
+    // Cross-origin fallback to port 3000 backend (if page loaded from Live Server or different port)
+    try {
+      if (typeof window !== 'undefined' && window.location.port !== '3000') {
+        const directRes = await fetch('http://localhost:3000/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: rawText,
+            language: isHinglish ? 'hinglish' : 'english',
+            messages: this.session.history.slice(-4),
+            context: {
+              role: this.session.role,
+              patientName: this.session.patientName,
+              doctorId: this.session.doctorId
+            }
+          })
+        });
+
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          if (directData && directData.message) {
+            this.session.history.push({ sender: 'user', text: rawText, timestamp: new Date(), attachment });
+            this.session.history.push({ sender: 'bot', text: directData.message, timestamp: new Date() });
+
+            return {
+              type: 'medical_solution',
+              message: directData.message,
+              modelUsed: directData.modelUsed || 'openai/gpt-4o-mini',
+              actionChips: isHinglish ? [
+                { label: '📅 Book with Dr. Akhilesh', action: 'select_doctor_doc_akhilesh' },
+                { label: '⏱️ Doctor Available Hours', action: 'query_akhilesh_free' },
+                { label: '👀 Dusre Doctors Dekhein', action: 'show_all_doctors' }
+              ] : [
+                { label: '📅 Book with Dr. Akhilesh', action: 'select_doctor_doc_akhilesh' },
+                { label: '⏱️ Check Available Hours', action: 'query_akhilesh_free' },
+                { label: '👀 View Other Doctors', action: 'show_all_doctors' }
+              ]
+            };
+          }
+        }
+      }
+    } catch (directErr) {
+      console.warn("Port 3000 fallback failed:", directErr.message);
     }
 
     return this.processUserMessage(rawText, attachment);
