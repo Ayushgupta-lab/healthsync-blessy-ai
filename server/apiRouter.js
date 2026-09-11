@@ -1,6 +1,7 @@
 // Modular REST API Dispatcher with RBAC Guards & Real Relational DB Integration
 import { db } from './db.js';
 import { authController } from './authController.js';
+import { askBlessyAI, getAIStatus } from './aiService.js';
 
 function extractBearerToken(req) {
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
@@ -501,6 +502,37 @@ export async function handleApiRequest(req, res, parsedUrl) {
         const body = await readBody();
         const saved = db.savePatientMemory(body.userId || effectiveUserId, body.memory || body);
         return sendJson(200, { success: true, memory: saved });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // LIVE AI CHATBOT & CLINICAL REASONING (OpenRouter / GPT-4o Mini / Gemini)
+    // -------------------------------------------------------------
+    if (pathname === '/api/ai/status' && method === 'GET') {
+      const status = getAIStatus();
+      return sendJson(200, status);
+    }
+
+    if (pathname === '/api/ai/chat' && method === 'POST') {
+      const body = await readBody();
+      const prompt = body.prompt || body.message || '';
+      const messages = body.messages || [];
+      const language = body.language || 'auto';
+      const context = body.context || {};
+
+      if (!prompt && (!messages || messages.length === 0)) {
+        return sendJson(400, { error: "Prompt or messages array is required." });
+      }
+
+      try {
+        const aiResponse = await askBlessyAI({ prompt, messages, language, context });
+        return sendJson(200, aiResponse);
+      } catch (aiErr) {
+        console.error("AI Generation failed:", aiErr);
+        return sendJson(502, {
+          error: "AI Service temporarily unavailable: " + aiErr.message,
+          status: 'offline'
+        });
       }
     }
 

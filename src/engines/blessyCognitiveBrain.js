@@ -38,6 +38,51 @@ export class BlessyCognitiveBrain {
     return isCausal || isRemedy || isConcept;
   }
 
+  // Live Generative AI Medical Reasoning via OpenRouter & GPT-4o-mini Backend
+  async answerMedicalQueryLive(text, langParam = 'english', patientMemory = null) {
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          language: langParam,
+          context: {
+            patientName: patientMemory?.profile?.name || '',
+            conditions: patientMemory?.chronicConditions || []
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.message) {
+          const isHindi = langParam === 'hindi';
+          return {
+            type: 'cognitive_medical_answer',
+            category: 'generative_ai',
+            modelUsed: data.modelUsed || 'openai/gpt-4o-mini',
+            message: data.message,
+            actionChips: isHindi ? [
+              { label: '🩺 डॉक्टर सूची देखें', action: 'show_doctors' },
+              { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' },
+              { label: '👨‍⚕️ डॉ. अखिलेश शर्मा (MD)', action: 'select_doctor_doc_akhilesh' }
+            ] : [
+              { label: '🩺 Show Available Doctors', action: 'show_doctors' },
+              { label: '📅 Book Appointment', action: 'book_appointment' },
+              { label: '👨‍⚕️ Dr. Akhilesh Sharma (MD)', action: 'select_doctor_doc_akhilesh' }
+            ]
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Live AI chat fallback to local knowledge base:", err.message);
+    }
+
+    // High-resilience fallback to local clinical knowledge
+    return this.answerMedicalQuery(text, langParam, patientMemory);
+  }
+
   // High-Precision Semantic Medical Reasoning Engine
   answerMedicalQuery(text, langParam = 'english', patientMemory = null) {
     const lang = langParam === 'hindi' ? 'hindi' : (langParam === 'hinglish' ? 'hinglish' : 'english');

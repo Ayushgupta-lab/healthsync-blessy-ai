@@ -47,7 +47,7 @@ export class ChatbotView {
           <img src="assets/blessy_logo.jpg" alt="Blessy AI" class="chat-avatar-img">
           <div class="chat-header-info">
             <h4>Blessy AI</h4>
-            <div class="chat-status-text">Medical AI Assistant • Online</div>
+            <div class="chat-status-text">Medical AI • GPT-4o Mini 🟢 Active</div>
           </div>
         </div>
         <div class="chat-header-actions">
@@ -364,11 +364,19 @@ export class ChatbotView {
     // Show typing indicator
     this.showTypingIndicator();
 
-    setTimeout(() => {
-      this.hideTypingIndicator();
-      const response = aiChatbotEngine.processUserMessage(text, attachment);
-      this.appendBotMessage(response, true);
-    }, 450);
+    setTimeout(async () => {
+      try {
+        const response = await (aiChatbotEngine.processUserMessageAsync ? 
+          aiChatbotEngine.processUserMessageAsync(text, attachment) : 
+          aiChatbotEngine.processUserMessage(text, attachment));
+        this.hideTypingIndicator();
+        this.appendBotMessage(response, true);
+      } catch (err) {
+        this.hideTypingIndicator();
+        const fallback = aiChatbotEngine.processUserMessage(text, attachment);
+        this.appendBotMessage(fallback, true);
+      }
+    }, 350);
   }
 
   appendUserMessage(text, attachment = null) {

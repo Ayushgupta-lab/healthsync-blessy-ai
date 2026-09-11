@@ -105,9 +105,11 @@ export default function VoiceOverlayModal({ isOpen, onClose, user = null }) {
     ]);
     setStatus('Processing...');
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const response = blessyConversationEngine.processMessage(textToProcess);
+        const response = await (blessyConversationEngine.processMessageAsync ? 
+          blessyConversationEngine.processMessageAsync(textToProcess) : 
+          blessyConversationEngine.processMessage(textToProcess));
 
         // Update active detected language dynamically per-message
         if (response.detectedLanguage) {
@@ -295,6 +297,12 @@ export default function VoiceOverlayModal({ isOpen, onClose, user = null }) {
             ) : (
               <span>🌐 English</span>
             )}
+          </div>
+
+          {/* Live OpenRouter GPT-4o Mini Status */}
+          <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-1 text-[11px] font-medium text-teal-300 shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+            <span>GPT-4o Mini Live</span>
           </div>
         </div>
 

@@ -249,6 +249,55 @@ export class BlessyConversationEngine {
     };
   }
 
+  // Main Asynchronous Processing Entry Point with Live AI Reasoner
+  async processMessageAsync(rawInput, attachment = null) {
+    try {
+      let rawText = '';
+      if (typeof rawInput === 'object' && rawInput !== null) {
+        rawText = rawInput.action || rawInput.text || rawInput.label || '';
+      } else {
+        rawText = String(rawInput || '');
+      }
+
+      const cleanText = rawText
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+        .trim();
+
+      const text = cleanText.toLowerCase();
+      const lang = this.resolveLang(rawText);
+      const activeUserId = this.session.user?.id || 'demo_patient_default';
+
+      // Emergency keywords check first
+      for (const kw of this.emergencyKeywords) {
+        if (text.includes(kw)) {
+          return this.processMessage(rawInput, attachment);
+        }
+      }
+
+      // Check if user is asking a clinical query, symptom question or advice
+      const isCognitive = blessyCognitiveBrain.isMedicalCognitiveQuery(text) ||
+        text.includes('kya karu') || text.includes('kya kare') || text.includes('batao') ||
+        text.includes('batayein') || text.includes('what to do') || text.includes('how to') ||
+        text.includes('remedy') || text.includes('medicine') || text.includes('dawa') ||
+        text.includes('fees') || text.includes('doctor') || text.includes('akhilesh') ||
+        text.includes('bukhar') || text.includes('sar dard') || text.includes('pain');
+
+      if (isCognitive && !text.startsWith('confirm_') && !text.startsWith('select_doctor_')) {
+        const memory = blessyMemoryEngine.getPatientMemory(activeUserId);
+        const liveAiResponse = await blessyCognitiveBrain.answerMedicalQueryLive(cleanText, lang, memory);
+        if (liveAiResponse && liveAiResponse.category === 'generative_ai') {
+          liveAiResponse.detectedLanguage = (lang === 'english') ? 'english' : 'hindi';
+          this.session.history.push({ role: 'assistant', text: liveAiResponse.message, timestamp: Date.now() });
+          return liveAiResponse;
+        }
+      }
+    } catch (err) {
+      console.warn("Async AI dispatch fallback:", err);
+    }
+
+    return this.processMessage(rawInput, attachment);
+  }
+
   // Main Processing Entry Point & Dispatcher
   processMessage(rawInput, attachment = null) {
     try {

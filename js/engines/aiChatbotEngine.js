@@ -74,6 +74,78 @@ export class AIChatbotEngine {
     return count >= 1 ? 'hinglish' : 'english';
   }
 
+  // Live Asynchronous Processing with OpenRouter GPT-4o-mini Integration
+  async processUserMessageAsync(rawText, attachment = null) {
+    const text = (rawText || '').trim().toLowerCase();
+    const isHinglish = this.detectLanguage(text) === 'hinglish';
+
+    // Immediate emergency triage check (fast synchronous return)
+    for (const kw of this.emergencyKeywords) {
+      if (text.includes(kw)) {
+        return this.processUserMessage(rawText, attachment);
+      }
+    }
+
+    // Pass through doctor commands or attachment
+    if (attachment || text.includes('main doctor hoon') || text.includes('shift kar do') || text.includes('weekly schedule')) {
+      return this.processUserMessage(rawText, attachment);
+    }
+
+    // Try live OpenRouter / GPT-4o-mini AI endpoint for clinical queries & chats
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: rawText,
+          language: isHinglish ? 'hinglish' : 'english',
+          messages: this.session.history.slice(-4),
+          context: {
+            role: this.session.role,
+            patientName: this.session.patientName,
+            doctorId: this.session.doctorId
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.message) {
+          this.session.history.push({
+            sender: 'user',
+            text: rawText,
+            timestamp: new Date(),
+            attachment
+          });
+          this.session.history.push({
+            sender: 'bot',
+            text: data.message,
+            timestamp: new Date()
+          });
+
+          return {
+            type: 'medical_solution',
+            message: data.message,
+            modelUsed: data.modelUsed || 'openai/gpt-4o-mini',
+            actionChips: isHinglish ? [
+              { label: '📅 Book with Dr. Akhilesh', action: 'select_doctor_doc_akhilesh' },
+              { label: '⏱️ Doctor Available Hours', action: 'query_akhilesh_free' },
+              { label: '👀 Dusre Doctors Dekhein', action: 'show_all_doctors' }
+            ] : [
+              { label: '📅 Book with Dr. Akhilesh', action: 'select_doctor_doc_akhilesh' },
+              { label: '⏱️ Check Available Hours', action: 'query_akhilesh_free' },
+              { label: '👀 View Other Doctors', action: 'show_all_doctors' }
+            ]
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Live AI chat unavailable, using deterministic engine:", err.message);
+    }
+
+    return this.processUserMessage(rawText, attachment);
+  }
+
   // Main processing pipeline
   processUserMessage(rawText, attachment = null) {
     const text = (rawText || '').trim().toLowerCase();
