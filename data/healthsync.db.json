@@ -1259,6 +1259,13 @@
       "role": "doctor",
       "createdAt": "2026-09-09T19:16:29.777Z",
       "expiresAt": "2026-09-10T19:16:29.777Z"
+    },
+    {
+      "token": "b008a7d4b3f1c3dbdb07285c687720a53f5d3e3d9644da4666fc2c5e8f98761e",
+      "userId": "usr_patient_alex",
+      "role": "patient",
+      "createdAt": "2026-09-11T18:25:53.250Z",
+      "expiresAt": "2026-10-11T18:25:53.250Z"
     }
   ],
   "passwordResets": [],
@@ -1400,6 +1407,17 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud_1789151153269_dfuw",
+      "actorId": "usr_patient_alex",
+      "actorRole": "patient",
+      "actorName": "Alex Morgan",
+      "action": "USER_LOGIN",
+      "resourceType": "session",
+      "resourceId": "b008a7d4",
+      "details": "Successful sign-in with extended session",
+      "timestamp": "2026-09-11T18:25:53.269Z"
+    },
     {
       "id": "aud_1788981389786_us8s",
       "actorId": "usr_1788981389773_7c28e91f",

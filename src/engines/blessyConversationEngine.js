@@ -1,7 +1,7 @@
 // Blessy Conversational AI Engine: Multi-Turn Clinical State Machine, Bilingual PA & Triage Safety
 import { clinicalTools } from '../services/clinicalTools.js';
 import { storageService } from '../services/storageService.js';
-import { formatTime12 } from '../services/scheduleEngine.js';
+import { scheduleEngine, formatTime12, timeToMinutes, minutesToTime } from '../services/scheduleEngine.js';
 import { blessyLearningEngine } from './blessyLearningEngine.js';
 import { blessyMemoryEngine } from './blessyMemoryEngine.js';
 import { blessyCognitiveBrain } from './blessyCognitiveBrain.js';
@@ -274,6 +274,23 @@ export class BlessyConversationEngine {
         }
       }
 
+      // 1B. Doctor Availability / Free Schedule Query (Deterministic clinical schedule lookup)
+      if (this.isDoctorFreeQuery(text)) {
+        return this.processMessage(rawInput, attachment);
+      }
+
+      // 1C. Direct Appointment Booking & Billing Pass (With duration & itemized charges)
+      if (this.isDirectBookingQuery(text)) {
+        return this.processMessage(rawInput, attachment);
+      }
+
+      // 1D. Consultation Fee Queries ("Doctor ki fees kitni hai?")
+      const isFeeQuery = /\b(fees?|charges?|pricing|cost)\b/i.test(text) ||
+        text.includes('kitne paise') || text.includes('kharcha') || text.includes('परामर्श शुल्क') || text.includes('फीस');
+      if (isFeeQuery && !text.includes('feeling')) {
+        return this.processMessage(rawInput, attachment);
+      }
+
       // 2. Identify pure system button clicks / DB actions
       const isDirectAction = text.startsWith('confirm_') || 
                              text.startsWith('select_doctor_') || 
@@ -474,6 +491,20 @@ export class BlessyConversationEngine {
       text.includes('kitne paise') || text.includes('kharcha') || text.includes('परामर्श शुल्क') || text.includes('फीस');
     if (isFeeQuery && !text.includes('feeling')) {
       return this.handleFeeQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 7B. Doctor Free Timings / Availability Schedule Query ("Dr. Rajesh kab free hain?")
+    // -------------------------------------------------------------
+    if (this.isDoctorFreeQuery(text)) {
+      return this.handleDoctorFreeQuery(text, lang);
+    }
+
+    // -------------------------------------------------------------
+    // 7C. Direct Appointment Booking & Billing Pass ("Dr. Rajesh se meri appointment book kar do 3 baje ki, 1 ghanta lagega")
+    // -------------------------------------------------------------
+    if (this.isDirectBookingQuery(text)) {
+      return this.handleDirectAppointmentBooking(text, lang);
     }
 
     // -------------------------------------------------------------
@@ -1900,6 +1931,197 @@ export class BlessyConversationEngine {
     };
   }
 
+  // Handler: Doctor Free Timings / Availability Lookup
+  handleDoctorFreeQuery(text, langParam) {
+    const lang = this.getLang(langParam);
+    let doctorId = this.session.doctorId;
+    const lower = text.toLowerCase();
+
+    if (lower.includes('patel') || lower.includes('rajesh') || lower.includes('ortho') || lower.includes('हड्डी') || lower.includes('पटेल') || lower.includes('राजेश')) {
+      doctorId = 'doc_patel';
+    } else if (lower.includes('priya') || lower.includes('neuro') || lower.includes('प्रिया')) {
+      doctorId = 'doc_priya';
+    } else if (lower.includes('khan') || lower.includes('pulmo') || lower.includes('खान')) {
+      doctorId = 'doc_khan';
+    } else if (lower.includes('vance') || lower.includes('marcus')) {
+      doctorId = 'doc_vance';
+    } else if (lower.includes('ananya') || lower.includes('derma') || lower.includes('अनन्या')) {
+      doctorId = 'doc_ananya';
+    } else if (lower.includes('akhilesh') || lower.includes('cardio') || lower.includes('अखिलेश')) {
+      doctorId = 'doc_akhilesh';
+    } else if (!doctorId) {
+      doctorId = 'doc_patel';
+    }
+
+    const doctor = storageService.getDoctorById(doctorId) || storageService.getDoctorById('doc_patel');
+    this.session.doctorId = doctor.id;
+    this.session.doctorName = doctor.name;
+
+    const parsedDate = this.parseDate(text) || new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const isToday = parsedDate === new Date().toISOString().split('T')[0];
+    const dateLabel = isToday ? (lang === 'hindi' ? 'आज' : 'Aaj') : (lang === 'hindi' ? 'कल' : 'Kal');
+
+    const daySlots = scheduleEngine.getDaySchedule(doctor.id, parsedDate, 30);
+    const availableSlots = daySlots.filter(s => s.status === 'available');
+
+    const morningSlots = availableSlots.filter(s => s.period === 'morning').map(s => s.timeFormatted);
+    const afternoonSlots = availableSlots.filter(s => s.period === 'afternoon').map(s => s.timeFormatted);
+    const eveningSlots = availableSlots.filter(s => s.period === 'evening').map(s => s.timeFormatted);
+
+    const baseFee = doctor.consultationFee || '₹900';
+    const fee1Hour = (doctor.feeAmount ? doctor.feeAmount * 2 : 1800);
+
+    if (lang === 'hindi' || lang === 'hinglish') {
+      return {
+        type: 'doctor_free_schedule',
+        data: { doctor, date: parsedDate, availableSlots },
+        message: `👨‍⚕️ **${doctor.name}** (${doctor.specialty}) की उपलब्धता:\n\n• 🏥 **कमरा**: ${doctor.roomNumber}\n• 📅 **दिनांक**: ${parsedDate} (${dateLabel})\n• 💰 **परामर्श शुल्क**: ${baseFee} (प्रति 30 मिनट) | 1 घंटे के लिए ₹${fee1Hour}\n\n🟢 **डॉक्टर के उपलब्ध समय (Available Free Slots):**\n${morningSlots.length > 0 ? `• 🌅 **सुबह**: ${morningSlots.join(', ')}\n` : ''}${afternoonSlots.length > 0 ? `• ☀️ **दोपहर**: ${afternoonSlots.join(', ')}\n` : ''}${eveningSlots.length > 0 ? `• 🌇 **शाम**: ${eveningSlots.join(', ')}\n` : ''}\n👉 **आपको किस समय अपॉइंटमेंट चाहिए?**\nआप कह सकते हैं: *"3 बजे 1 घंटे के लिए बुक कर दो"* या नीचे दिए बटन पर क्लिक करें:`,
+        actionChips: [
+          { label: `⏱️ ${dateLabel} 03:00 PM (1 घंटा)`, action: `confirm_time_15:00_60` },
+          { label: `⏱️ ${dateLabel} 03:00 PM (30 मिनट)`, action: `confirm_time_15:00_30` },
+          { label: `⏱️ ${dateLabel} 11:30 AM`, action: `confirm_time_11:30_30` },
+          { label: `⏱️ ${dateLabel} 04:00 PM`, action: `confirm_time_16:00_30` },
+          { label: '🩺 सभी डॉक्टर देखें', action: 'show_doctors' }
+        ]
+      };
+    }
+
+    return {
+      type: 'doctor_free_schedule',
+      data: { doctor, date: parsedDate, availableSlots },
+      message: `👨‍⚕️ **${doctor.name}** (${doctor.specialty}) Availability:\n\n• 🏥 **Room**: ${doctor.roomNumber}\n• 📅 **Date**: ${parsedDate} (${dateLabel})\n• 💰 **Fee**: ${baseFee} (per 30 min) | ₹${fee1Hour} for 1 hour\n\n🟢 **Available Free Slots:**\n${morningSlots.length > 0 ? `• 🌅 **Morning**: ${morningSlots.join(', ')}\n` : ''}${afternoonSlots.length > 0 ? `• ☀️ **Afternoon**: ${afternoonSlots.join(', ')}\n` : ''}${eveningSlots.length > 0 ? `• 🌇 **Evening**: ${eveningSlots.join(', ')}\n` : ''}\n👉 **When would you like to schedule?**\nYou can say: *"Book Dr. Rajesh at 3:00 PM for 1 hour"* or tap below:`,
+      actionChips: [
+        { label: `⏱️ ${dateLabel} 03:00 PM (1 Hour)`, action: `confirm_time_15:00_60` },
+        { label: `⏱️ ${dateLabel} 03:00 PM (30 Min)`, action: `confirm_time_15:00_30` },
+        { label: `⏱️ ${dateLabel} 11:30 AM`, action: `confirm_time_11:30_30` },
+        { label: `⏱️ ${dateLabel} 04:00 PM`, action: `confirm_time_16:00_30` },
+        { label: '🩺 View All Doctors', action: 'show_doctors' }
+      ]
+    };
+  }
+
+  // Handler: Direct Appointment Booking with Duration & Charges / Billing
+  handleDirectAppointmentBooking(text, langParam) {
+    const lang = this.getLang(langParam);
+    const lower = text.toLowerCase();
+
+    // 1. Identify Doctor
+    let doctorId = this.session.doctorId;
+    if (lower.includes('patel') || lower.includes('rajesh') || lower.includes('ortho') || lower.includes('हड्डी') || lower.includes('पटेल') || lower.includes('राजेश')) {
+      doctorId = 'doc_patel';
+    } else if (lower.includes('priya') || lower.includes('neuro') || lower.includes('प्रिया')) {
+      doctorId = 'doc_priya';
+    } else if (lower.includes('khan') || lower.includes('pulmo') || lower.includes('खान')) {
+      doctorId = 'doc_khan';
+    } else if (lower.includes('vance') || lower.includes('marcus')) {
+      doctorId = 'doc_vance';
+    } else if (lower.includes('ananya') || lower.includes('derma') || lower.includes('अनन्या')) {
+      doctorId = 'doc_ananya';
+    } else if (lower.includes('akhilesh') || lower.includes('cardio') || lower.includes('अखिलेश')) {
+      doctorId = 'doc_akhilesh';
+    } else if (!doctorId) {
+      doctorId = 'doc_patel';
+    }
+
+    const doctor = storageService.getDoctorById(doctorId) || storageService.getDoctorById('doc_patel');
+    this.session.doctorId = doctor.id;
+    this.session.doctorName = doctor.name;
+
+    // 2. Identify Time
+    let parsedTime = this.parseTime(text) || this.session.pendingSlot || "15:00";
+    const parsedDate = this.parseDate(text) || this.session.pendingDate || new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    // Check action token like confirm_time_15:00_60
+    const tokenMatch = lower.match(/confirm_time_(\d{2}:\d{2})(?:_(\d+))?/);
+    let duration = this.parseDuration(text);
+    if (tokenMatch) {
+      parsedTime = tokenMatch[1];
+      if (tokenMatch[2]) duration = parseInt(tokenMatch[2], 10);
+    }
+
+    // 3. Billing & Charges Calculation
+    const baseFee = doctor.feeAmount || parseInt(String(doctor.consultationFee).replace(/[^0-9]/g, ''), 10) || 900;
+    const slotsCount = Math.max(1, Math.round(duration / 30));
+    const totalBillAmount = baseFee * slotsCount;
+    const durationLabel = duration >= 60 ? `${duration / 60} घंटा (${duration} मिनट)` : `${duration} मिनट`;
+    const durationLabelEn = duration >= 60 ? `${duration / 60} Hour (${duration} mins)` : `${duration} mins`;
+    const feeText = `₹${totalBillAmount.toLocaleString('en-IN')}`;
+
+    const startMinutes = timeToMinutes(parsedTime);
+    const endMinutes = startMinutes + duration;
+    const endTime = minutesToTime(endMinutes);
+
+    // 4. Save Real Appointment to Database & Storage
+    const patientName = this.session.user?.fullName || this.session.patientName || "Alex Morgan";
+    const patientPhone = this.session.user?.phone || this.session.patientPhone || "+91 98765 43210";
+
+    const booking = clinicalTools.bookAppointment({
+      doctorId: doctor.id,
+      date: parsedDate,
+      time: parsedTime,
+      durationMinutes: duration,
+      fee: feeText,
+      patientName,
+      patientPhone,
+      symptoms: this.session.symptoms.raw || `Consultation with ${doctor.name} (${durationLabelEn})`
+    });
+
+    this.session.pendingSlot = null;
+    this.session.pendingDate = null;
+    this.session.state = 'IDLE';
+
+    if (!booking.success) {
+      const altSlots = scheduleEngine.getDaySchedule(doctor.id, parsedDate, 30)
+        .filter(s => s.status === 'available')
+        .slice(0, 3);
+      
+      const altChips = altSlots.map(s => ({
+        label: `⏱️ ${s.timeFormatted} (${duration} Min)`,
+        action: `confirm_time_${s.startTime}_${duration}`
+      }));
+      altChips.push({ label: '🩺 ' + (lang === 'hindi' || lang === 'hinglish' ? 'सभी डॉक्टर देखें' : 'View All Doctors'), action: 'show_doctors' });
+
+      if (lang === 'hindi' || lang === 'hinglish') {
+        return {
+          type: 'booking_conflict',
+          message: `⚠️ **सूचना**: ${parsedDate} को **${formatTime12(parsedTime)}** पर **${doctor.name}** उपलब्ध नहीं हैं (*${booking.error || 'स्लॉट पहले से बुक है'}*)।\n\n👉 **क्या आप इनमें से कोई अन्य समय लेना चाहेंगे?**`,
+          actionChips: altChips
+        };
+      }
+      return {
+        type: 'booking_conflict',
+        message: `⚠️ **Notice**: **${doctor.name}** is not available at **${formatTime12(parsedTime)}** on ${parsedDate} (*${booking.error || 'Slot already booked'}*).\n\n👉 **Would you like to choose an alternate time?**`,
+        actionChips: altChips
+      };
+    }
+
+    if (lang === 'hindi' || lang === 'hinglish') {
+      return {
+        type: 'booking_confirmed',
+        toolCalled: 'bookAppointment',
+        data: booking.appointment,
+        message: `🎉 **बधाई हो! आपकी अपॉइंटमेंट सफलतापूर्वक बुक हो गई है!**\n\n📋 **अपॉइंटमेंट एवं बिल विवरण (Confirmed Pass & Invoice):**\n• 🆔 **बुकिंग आईडी**: \`${booking.appointment.id}\`\n• 👨‍⚕️ **विशेषज्ञ डॉक्टर**: ${doctor.name} (${doctor.specialty})\n• 🏥 **क्लिनिक रूम**: ${doctor.roomNumber}\n• 📅 **दिनांक**: ${parsedDate}\n• ⏱️ **समय**: ${formatTime12(parsedTime)} से ${formatTime12(endTime)} (${durationLabel})\n• 👤 **मरीज़**: ${booking.appointment.patientName}\n\n💰 **बिल एवं शुल्क विवरण (Billing Breakdown):**\n• बेस परामर्श शुल्क (30 मिनट): ₹${baseFee}\n• निर्धारित समय: ${durationLabel} (${slotsCount} स्लॉट)\n• **कुल देय राशि (Total Bill Amount)**: **${feeText}**\n• भुगतान मोड: क्लिनिक काउंटर पर देय\n\n✅ आपका डिजिटल अपॉइंटमेंट पास डेटाबेस में सुरक्षित दर्ज हो चुका है।`,
+        actionChips: [
+          { label: '📋 डिजिटल पास देखें', action: `view_pass_${booking.appointment.id}` },
+          { label: '📅 नया अपॉइंटमेंट बुक करें', action: 'book_appointment' },
+          { label: '🩺 सभी डॉक्टर देखें', action: 'show_doctors' }
+        ]
+      };
+    }
+
+    return {
+      type: 'booking_confirmed',
+      toolCalled: 'bookAppointment',
+      data: booking.appointment,
+      message: `🎉 **Appointment Successfully Confirmed!**\n\n📋 **Booking Pass & Official Invoice:**\n• 🆔 **Booking ID**: \`${booking.appointment.id}\`\n• 👨‍⚕️ **Doctor**: ${doctor.name} (${doctor.specialty})\n• 🏥 **Clinic Room**: ${doctor.roomNumber}\n• 📅 **Date**: ${parsedDate}\n• ⏱️ **Time**: ${formatTime12(parsedTime)} to ${formatTime12(endTime)} (${durationLabelEn})\n• 👤 **Patient**: ${booking.appointment.patientName}\n\n💰 **Billing Breakdown:**\n• Base Fee (30 mins): ₹${baseFee}\n• Duration Requested: ${durationLabelEn} (${slotsCount} slot${slotsCount > 1 ? 's' : ''})\n• **Total Bill Amount**: **${feeText}**\n• Payment: Pay at Clinic Reception\n\n✅ Your official verified digital appointment pass is registered in the database.`,
+      actionChips: [
+        { label: '📋 View Digital Pass', action: `view_pass_${booking.appointment.id}` },
+        { label: '📅 Book Another Appointment', action: 'book_appointment' },
+        { label: '🩺 View All Doctors', action: 'show_doctors' }
+      ]
+    };
+  }
+
   // Handler: Fee Queries
   handleFeeQuery(text, langParam) {
     const lang = this.getLang(langParam);
@@ -2551,6 +2773,97 @@ export class BlessyConversationEngine {
     return medicalTerms.some(term => lower.includes(term));
   }
 
+  isDoctorFreeQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    const isFreeIntent = (
+      lower.includes('free') ||
+      lower.includes('फ्री') ||
+      lower.includes('available') ||
+      lower.includes('availability') ||
+      lower.includes('उपलब्ध') ||
+      lower.includes('उपलब्धता') ||
+      lower.includes('kab milenge') ||
+      lower.includes('kitne baje milenge') ||
+      lower.includes('kis time milenge') ||
+      lower.includes('timing kya hai') ||
+      lower.includes('timings kya hai') ||
+      lower.includes('schedule kya hai') ||
+      lower.includes('kab baithte hain') ||
+      lower.includes('kab aate hain') ||
+      lower.includes('kab aayenge')
+    );
+
+    const hasDoctorOrTimeContext = (
+      lower.includes('kab') ||
+      lower.includes('kitne') ||
+      lower.includes('kis') ||
+      lower.includes('when') ||
+      lower.includes('what') ||
+      lower.includes('time') ||
+      lower.includes('slot') ||
+      lower.includes('doctor') ||
+      lower.includes('dr') ||
+      lower.includes('honge') ||
+      lower.includes('hain') ||
+      lower.includes('rahenge') ||
+      lower.includes('milenge') ||
+      lower.includes('मिलेंगे')
+    );
+
+    return isFreeIntent && hasDoctorOrTimeContext;
+  }
+
+  isDirectBookingQuery(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+
+    // 1. Direct confirm action token
+    if (lower.startsWith('confirm_time_')) return true;
+
+    // Polite queries like "can you book" or "kya book ho sakta hai" indicate slot negotiation
+    if (lower.startsWith('can you') || lower.startsWith('could you') || lower.includes('kya aap') || lower.includes('kya book')) {
+      return false;
+    }
+
+    const hasTime = this.parseTime(lower) !== null || /(?:\d{1,2})\s*(?:baje|pm|am|o'clock)/i.test(lower);
+    const hasDuration = (
+      lower.includes('ghanta') ||
+      lower.includes('ghante') ||
+      lower.includes('hour') ||
+      lower.includes('minute') ||
+      lower.includes('min') ||
+      lower.includes('घंटा') ||
+      lower.includes('घंटे')
+    );
+
+    // Direct imperative commands for instant booking (matches user voice request)
+    const isExplicitCommand = (
+      lower.includes('book kar do') ||
+      lower.includes('book kardo') ||
+      lower.includes('book kar dijiye') ||
+      lower.includes('appointment book kar') ||
+      lower.includes('meri appointment book') ||
+      lower.includes('appointment chahiye') ||
+      lower.includes('booking kar do') ||
+      lower.includes('book this appointment') ||
+      lower.includes('book appointment now') ||
+      lower.includes('कर दो') ||
+      lower.includes('कर दीजिए')
+    );
+
+    if (isExplicitCommand && (hasTime || hasDuration)) {
+      return true;
+    }
+
+    // Direct phrases with duration, time and appointment/book
+    if ((lower.includes('appointment') || lower.includes('book')) && hasDuration && hasTime) {
+      return true;
+    }
+
+    return false;
+  }
+
   parseTime(text) {
     if (!text) return null;
     const lower = text.toLowerCase().trim();
@@ -2576,35 +2889,15 @@ export class BlessyConversationEngine {
       const mod = (colonMatch[3] || '').toLowerCase();
       if (mod === 'pm' && h < 12) h += 12;
       else if (mod === 'am' && h === 12) h = 0;
-      else if (mod !== 'am' && h <= 7) h += 12; // In clinic, 1:30 to 7:30 are afternoon/evening slots
+      else if (mod !== 'am' && h <= 7) h += 12;
       return `${String(h).padStart(2, '0')}:${m}`;
     }
 
-    // 3. Hindi word-based numbers with explicit time markers
-    const wordNums = {
-      'ek': 1, 'do': 2, 'teen': 3, 'chaar': 4, 'char': 4, 'paanch': 5, 'panch': 5,
-      'chhe': 6, 'che': 6, 'saat': 7, 'aath': 8, 'nau': 9, 'das': 10, 'gyarah': 11, 'baarah': 12
-    };
-
+    // 3. Explicit single number with time modifier (PRIORITY): "3 baje", "4 pm", "at 3", "3 o'clock"
     let isHalf = lower.includes('sadhe') || lower.includes('saadhe') || lower.includes('30');
     let isEvening = lower.includes('shaam') || lower.includes('dopahar') || lower.includes('raat') || lower.includes('pm');
     let isMorning = lower.includes('subah') || lower.includes('morning') || lower.includes('am');
-    const hasTimeKeyword = lower.includes('baje') || lower.includes('time') || lower.includes('slot') || lower.includes('at ') || isEvening || isMorning;
 
-    if (hasTimeKeyword) {
-      for (const [w, val] of Object.entries(wordNums)) {
-        if (new RegExp(`\\b${w}\\s*(?:baje|pm|am)?\\b`).test(lower)) {
-          let h = val;
-          let m = isHalf ? 30 : 0;
-          if (isEvening && h < 12) h += 12;
-          else if (isMorning && h === 12) h = 0;
-          else if (!isMorning && h <= 7) h += 12;
-          return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        }
-      }
-    }
-
-    // 4. Explicit single number with time modifier: "4 baje", "4 pm", "at 4", "4 o'clock"
     const explicitTimeMatch = lower.match(/\b(?:at\s+)?(\d{1,2})\s*(am|pm|baje|o'clock)\b/);
     if (explicitTimeMatch) {
       let h = parseInt(explicitTimeMatch[1], 10);
@@ -2621,6 +2914,24 @@ export class BlessyConversationEngine {
       }
     }
 
+    // 4. Hindi word-based numbers with mandatory time markers (avoids 'kar do' false positive)
+    const wordNums = {
+      'teen': 3, 'chaar': 4, 'char': 4, 'paanch': 5, 'panch': 5,
+      'chhe': 6, 'che': 6, 'saat': 7, 'aath': 8, 'nau': 9, 'das': 10,
+      'gyarah': 11, 'baarah': 12, 'ek': 1, 'do': 2
+    };
+
+    for (const [w, val] of Object.entries(wordNums)) {
+      if (new RegExp(`\\b${w}\\s+(?:baje|pm|am)\\b`).test(lower)) {
+        let h = val;
+        let m = isHalf ? 30 : 0;
+        if (isEvening && h < 12) h += 12;
+        else if (isMorning && h === 12) h = 0;
+        else if (!isMorning && h <= 7) h += 12;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+
     // 5. Short standalone number when in SELECTING_DATE_TIME
     if (this.session.state === 'SELECTING_DATE_TIME' && /^\s*(\d{1,2})\s*$/.test(lower)) {
       let h = parseInt(lower, 10);
@@ -2629,6 +2940,42 @@ export class BlessyConversationEngine {
     }
 
     return null;
+  }
+
+  parseDuration(text) {
+    if (!text) return 30;
+    const lower = text.toLowerCase();
+    if (
+      /\b(?:2|do|two|२)\s*(?:ghante|ghanta|hours?|hrs?|घंटे|घंटा)\b/.test(lower) ||
+      lower.includes('2 ghante') ||
+      lower.includes('2 ghanta') ||
+      lower.includes('2 hours') ||
+      lower.includes('दो घंटे') ||
+      lower.includes('2 घंटा')
+    ) {
+      return 120;
+    }
+    if (
+      /\b(?:1|ek|one|१)\s*(?:ghante|ghanta|hour|hr|घंटे|घंटा)\b/.test(lower) ||
+      lower.includes('1 ghanta') ||
+      lower.includes('1 ghante') ||
+      lower.includes('ek ghanta') ||
+      lower.includes('ek ghante') ||
+      lower.includes('1 hour') ||
+      lower.includes('one hour') ||
+      lower.includes('60 min') ||
+      lower.includes('60 minute') ||
+      lower.includes('1 घंटा') ||
+      lower.includes('1 घंटे') ||
+      lower.includes('एक घंटा') ||
+      lower.includes('एक घंटे')
+    ) {
+      return 60;
+    }
+    if (/\b(?:45)\s*(?:min|minute|minutes|मिनट)\b/.test(lower)) {
+      return 45;
+    }
+    return 30;
   }
 
   parseDate(text) {

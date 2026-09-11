@@ -1,13 +1,16 @@
 // Clinical Tools: Deterministic function-calling tools for Blessy Voice & Front Desk AI
 import { storageService } from './storageService.js';
-import { scheduleEngine, formatTime12 } from './scheduleEngine.js';
+import { scheduleEngine, formatTime12, timeToMinutes, minutesToTime, isOverlapping } from './scheduleEngine.js';
 
 export const clinicalTools = {
   // 1. Check Slot Availability with Conflict Breakdown & Alternate Recommendations
   checkSlotAvailability({ doctorId = "doc_akhilesh", date, timePreference = null, durationMinutes = 30 }) {
     const targetDate = date || new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const doctor = storageService.getDoctorById(doctorId);
-    const slots = scheduleEngine.getDaySchedule(doctorId, targetDate, durationMinutes);
+    if (!doctor) return { success: false, error: "Doctor not found" };
+
+    const dur = parseInt(durationMinutes, 10) || 30;
+    const slots = scheduleEngine.getDaySchedule(doctorId, targetDate, 30);
 
     if (slots.length === 1 && slots[0].status === 'leave') {
       return {
@@ -22,19 +25,14 @@ export const clinicalTools = {
     const availableSlots = slots.filter(s => s.status === 'available');
 
     if (timePreference) {
-      const match = slots.find(s => s.startTime === timePreference);
-      if (match && match.status === 'available') {
-        return {
-          success: true,
-          status: 'slot_available',
-          doctor: { id: doctor.id, name: doctor.name, specialty: doctor.specialty },
-          date: targetDate,
-          requestedSlot: match,
-          isAvailable: true,
-          alternatives: availableSlots.slice(0, 3)
-        };
-      } else {
-        const conflictReason = match ? match.meta?.message || match.status : 'Outside clinic operating hours';
+      const reqStartM = timeToMinutes(timePreference);
+      const reqEndM = reqStartM + dur;
+      const reqEndTime = minutesToTime(reqEndM);
+
+      const workStartM = timeToMinutes(doctor.routine?.workStart || "08:30");
+      const workEndM = timeToMinutes(doctor.routine?.workEnd || "20:30");
+
+      if (reqStartM < workStartM || reqEndM > workEndM) {
         return {
           success: false,
           status: 'slot_conflict',
@@ -42,10 +40,80 @@ export const clinicalTools = {
           doctor: { id: doctor.id, name: doctor.name },
           date: targetDate,
           requestedTime: timePreference,
-          conflictReason,
-          alternatives: availableSlots.slice(0, 2)
+          conflictReason: 'Outside clinic operating hours',
+          alternatives: availableSlots.slice(0, 3)
         };
       }
+
+      // Check active surgery
+      const activeSurgery = scheduleEngine.getDoctorActiveSurgery(doctorId, targetDate);
+      if (activeSurgery && isOverlapping(timePreference, reqEndTime, activeSurgery.startTime, activeSurgery.endTime)) {
+        return {
+          success: false,
+          status: 'slot_conflict',
+          isAvailable: false,
+          doctor: { id: doctor.id, name: doctor.name },
+          date: targetDate,
+          requestedTime: timePreference,
+          conflictReason: `Doctor in OT Surgery (${formatTime12(activeSurgery.startTime)} - ${formatTime12(activeSurgery.endTime)})`,
+          alternatives: availableSlots.slice(0, 3)
+        };
+      }
+
+      // Check breaks
+      const breaks = doctor.routine?.breaks || [];
+      for (const b of breaks) {
+        if (isOverlapping(timePreference, reqEndTime, b.startTime, b.endTime)) {
+          return {
+            success: false,
+            status: 'slot_conflict',
+            isAvailable: false,
+            doctor: { id: doctor.id, name: doctor.name },
+            date: targetDate,
+            requestedTime: timePreference,
+            conflictReason: `${b.name} (${formatTime12(b.startTime)} - ${formatTime12(b.endTime)})`,
+            alternatives: availableSlots.slice(0, 3)
+          };
+        }
+      }
+
+      // Check existing appointments
+      const existingAppointments = storageService.getAppointmentsByDoctor(doctorId).filter(
+        a => a.date === targetDate && a.status !== 'cancelled'
+      );
+      const conflictApt = existingAppointments.find(a => {
+        const aptStartM = timeToMinutes(a.time);
+        const aptEndM = aptStartM + (a.durationMinutes || 30);
+        return isOverlapping(timePreference, reqEndTime, a.time, minutesToTime(aptEndM));
+      });
+
+      if (conflictApt) {
+        return {
+          success: false,
+          status: 'slot_conflict',
+          isAvailable: false,
+          doctor: { id: doctor.id, name: doctor.name },
+          date: targetDate,
+          requestedTime: timePreference,
+          conflictReason: 'Already booked for another patient',
+          alternatives: availableSlots.slice(0, 3)
+        };
+      }
+
+      return {
+        success: true,
+        status: 'slot_available',
+        doctor: { id: doctor.id, name: doctor.name, specialty: doctor.specialty },
+        date: targetDate,
+        requestedSlot: {
+          startTime: timePreference,
+          endTime: reqEndTime,
+          durationMinutes: dur,
+          timeFormatted: `${formatTime12(timePreference)} - ${formatTime12(reqEndTime)}`
+        },
+        isAvailable: true,
+        alternatives: availableSlots.slice(0, 3)
+      };
     }
 
     return {
@@ -64,6 +132,7 @@ export const clinicalTools = {
     doctorId = "doc_akhilesh",
     date,
     time,
+    durationMinutes = 30,
     patientName,
     patientPhone,
     patientAge = 30,
@@ -72,12 +141,21 @@ export const clinicalTools = {
     urgency = "routine",
     fee = null
   }) {
-    if (!date || !time || !patientName || !patientPhone) {
-      return { success: false, error: "Missing required parameters: date, time, patientName, patientPhone" };
+    if (!date || !time) {
+      return { success: false, error: "Missing required parameters: date and time" };
     }
 
-    const doctor = storageService.getDoctorById(doctorId);
-    const check = this.checkSlotAvailability({ doctorId, date, timePreference: time });
+    const doctor = storageService.getDoctorById(doctorId) || storageService.getDoctorById('doc_akhilesh');
+    const safePatientName = patientName || "Guest Patient";
+    const safePatientPhone = patientPhone || "+91 98765 43210";
+    const durMin = parseInt(durationMinutes, 10) || 30;
+
+    const check = this.checkSlotAvailability({
+      doctorId,
+      date,
+      timePreference: time,
+      durationMinutes: durMin
+    });
 
     if (!check.isAvailable && check.status !== 'day_summary') {
       return {
@@ -95,9 +173,9 @@ export const clinicalTools = {
       room: doctor.roomNumber,
       date,
       time,
-      durationMinutes: 30,
-      patientName,
-      patientPhone,
+      durationMinutes: durMin,
+      patientName: safePatientName,
+      patientPhone: safePatientPhone,
       patientAge: parseInt(patientAge, 10) || 30,
       bloodGroup,
       symptoms,
