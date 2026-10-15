@@ -19,7 +19,6 @@ export default function BookingWizard({ doctors, onBookingComplete }) {
     patientAge: 29,
     bloodGroup: 'O+',
     symptoms: 'Routine Executive Checkup',
-    painLevel: 3,
     attachments: []
   });
 

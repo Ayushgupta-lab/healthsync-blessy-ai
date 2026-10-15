@@ -213,20 +213,6 @@ export class PatientView {
               <textarea class="form-textarea" id="patient-symptoms-input" rows="3" placeholder="Describe symptoms or click a helper chip above..." required></textarea>
             </div>
 
-            <!-- Pain Scale Slider -->
-            <div class="form-group pain-scale-group">
-              <label class="form-label" style="display: flex; justify-content: space-between;">
-                <span>Pain / Discomfort Level: <strong id="pain-val-display" style="color: var(--accent-cyan);">${this.painLevel} / 10</strong></span>
-                <span id="pain-severity-tag" class="badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8;">Mild</span>
-              </label>
-              <input type="range" class="pain-slider" id="pain-slider" min="0" max="10" value="${this.painLevel}">
-              <div class="pain-labels">
-                <span>0 (None)</span>
-                <span>5 (Moderate)</span>
-                <span>10 (Severe)</span>
-              </div>
-            </div>
-
             <!-- Bidirectional Reports & Symptom Image Attachments -->
             <div class="attachment-upload-section">
               <label class="form-label" style="display: flex; justify-content: space-between;">
@@ -763,17 +749,9 @@ export class PatientView {
     document.querySelectorAll('.symptom-helper-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const sym = chip.dataset.symptom;
-        const pain = parseInt(chip.dataset.pain, 10) || 3;
         const symInput = document.getElementById('patient-symptoms-input');
-        const slider = document.getElementById('pain-slider');
-        const painDisplay = document.getElementById('pain-val-display');
 
         if (symInput) symInput.value = sym;
-        if (slider) {
-          slider.value = pain;
-          this.painLevel = pain;
-          if (painDisplay) painDisplay.textContent = `${pain} / 10`;
-        }
         notifier.showToast("Symptom auto-filled!", "success");
       });
     });
@@ -829,34 +807,6 @@ export class PatientView {
         });
         this.renderAttachmentPreviews();
         notifier.showToast(`${files.length} file(s) attached!`, "success");
-      });
-    }
-
-    // Pain Slider
-    const slider = document.getElementById('pain-slider');
-    const painDisplay = document.getElementById('pain-val-display');
-    const severityTag = document.getElementById('pain-severity-tag');
-
-    if (slider) {
-      slider.addEventListener('input', (e) => {
-        this.painLevel = parseInt(e.target.value, 10);
-        if (painDisplay) painDisplay.textContent = `${this.painLevel} / 10`;
-
-        if (severityTag) {
-          if (this.painLevel >= 7) {
-            severityTag.textContent = "High / Severe";
-            severityTag.style.background = "rgba(239, 68, 68, 0.2)";
-            severityTag.style.color = "#f87171";
-          } else if (this.painLevel >= 4) {
-            severityTag.textContent = "Moderate";
-            severityTag.style.background = "rgba(245, 158, 11, 0.2)";
-            severityTag.style.color = "#fbbf24";
-          } else {
-            severityTag.textContent = "Mild";
-            severityTag.style.background = "rgba(6, 182, 212, 0.15)";
-            severityTag.style.color = "#38bdf8";
-          }
-        }
       });
     }
 

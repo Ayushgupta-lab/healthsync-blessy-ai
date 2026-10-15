@@ -26,7 +26,8 @@ export class BlessyConversationEngine {
       patientName: 'Alex Morgan',
       patientPhone: '+1 (555) 019-2834',
       user: null,
-      history: []
+      history: [],
+      greetedOnce: false  // Prevents repeating full greeting on every 'hello'
     };
 
     this.emergencyKeywords = [
@@ -249,7 +250,7 @@ export class BlessyConversationEngine {
     };
   }
 
-  // Main Asynchronous Processing Entry Point with Live AI Reasoner
+  // Main Asynchronous Processing Entry Point with Live AI Reasoner (Alexa/Gemini-style)
   async processMessageAsync(rawInput, attachment = null) {
     try {
       let rawText = '';
@@ -267,6 +268,10 @@ export class BlessyConversationEngine {
       const lang = this.resolveLang(rawText);
       const activeUserId = this.session.user?.id || 'demo_patient_default';
 
+      // Record user message in history
+      this.session.history.push({ role: 'user', text: cleanText, timestamp: Date.now() });
+      blessyMemoryEngine.extractAndStoreFacts(activeUserId, cleanText);
+
       // 1. Emergency keywords check first (immediate safety interrupt)
       for (const kw of this.emergencyKeywords) {
         if (text.includes(kw)) {
@@ -274,44 +279,95 @@ export class BlessyConversationEngine {
         }
       }
 
-      // 1B. Doctor Availability / Free Schedule Query (Deterministic clinical schedule lookup)
-      if (this.isDoctorFreeQuery(text)) {
+      // Acute triage red flag patterns
+      if (
+        /(seene|chhati|chati|chest).*(dard|pain|dabaav|tightness|pressure|jalan)/i.test(text) ||
+        /(saans|breath).*(takleef|problem|phool|nahi aa|cannot)/i.test(text) ||
+        /(khoon|bleeding).*(tez|profuse|heavy|ruk nahi)/i.test(text) ||
+        /(behosh|unconscious|fainted)/i.test(text)
+      ) {
         return this.processMessage(rawInput, attachment);
       }
 
-      // 1C. Direct Appointment Booking & Billing Pass (With duration & itemized charges)
-      if (this.isDirectBookingQuery(text)) {
+      // 2. Identify pure system button clicks / DB actions — route deterministically
+      const isDirectAction = text.startsWith('confirm_') ||
+                             text.startsWith('select_doctor_') ||
+                             text.startsWith('block_') ||
+                             text.startsWith('shift_') ||
+                             text.startsWith('action_') ||
+                             text.startsWith('view_pass_') ||
+                             text.startsWith('reschedule_') ||
+                             text === 'show_doctors' ||
+                             text === 'discuss_symptoms' ||
+                             text === 'book_appointment' ||
+                             text === 'view_doctor_schedule' ||
+                             text === 'add_buffer' ||
+                             text === 'block_surgery' ||
+                             text === 'open_ml_insights' ||
+                             text === 'mark_leave_tomorrow';
+
+      if (isDirectAction) {
         return this.processMessage(rawInput, attachment);
       }
 
-      // 1D. Consultation Fee Queries ("Doctor ki fees kitni hai?")
+      // 3. Named doctor selection & appointment confirmation — route deterministically
+      if (this.isDoctorFreeQuery(text) || this.isDirectBookingQuery(text)) {
+        return this.processMessage(rawInput, attachment);
+      }
+
+      // 4. Consultation fee queries
       const isFeeQuery = /\b(fees?|charges?|pricing|cost)\b/i.test(text) ||
         text.includes('kitne paise') || text.includes('kharcha') || text.includes('परामर्श शुल्क') || text.includes('फीस');
       if (isFeeQuery && !text.includes('feeling')) {
         return this.processMessage(rawInput, attachment);
       }
 
-      // 2. Identify pure system button clicks / DB actions
-      const isDirectAction = text.startsWith('confirm_') || 
-                             text.startsWith('select_doctor_') || 
-                             text.startsWith('block_') || 
-                             text.startsWith('shift_') ||
-                             text.startsWith('action_') ||
-                             text === 'show_doctors' || 
-                             text === 'book_appointment';
+      // 5. Time-slot or confirmation flow — route deterministically
+      const parsedTimeValue = this.parseTime(text);
+      if (
+        (parsedTimeValue !== null && !text.includes('book an appointment')) ||
+        text.startsWith('confirm_time_') ||
+        text.startsWith('slot_tomorrow_') ||
+        (this.session.state === 'AWAITING_CONFIRMATION') ||
+        (this.session.state === 'SELECTING_DATE_TIME' && parsedTimeValue !== null)
+      ) {
+        return this.processMessage(rawInput, attachment);
+      }
 
-      // 3. Send all conversational queries, symptoms, health questions, and chat to Live GPT-4o-mini!
-      if (!isDirectAction) {
-        const memory = blessyMemoryEngine.getPatientMemory(activeUserId);
-        const liveAiResponse = await blessyCognitiveBrain.answerMedicalQueryLive(cleanText, lang, memory);
-        if (liveAiResponse && liveAiResponse.message) {
-          liveAiResponse.detectedLanguage = (lang === 'english') ? 'english' : 'hindi';
-          this.session.history.push({ role: 'assistant', text: liveAiResponse.message, timestamp: Date.now() });
-          return liveAiResponse;
-        }
+      // 6. Build rich conversation history for Gemini context (last 6 turns)
+      const recentHistory = this.session.history.slice(-6).map(h => ({
+        role: h.role === 'user' ? 'user' : 'model',
+        parts: [{ text: h.text }]
+      }));
+
+      // Remove the last item we just added (the current user message) from history for contents array
+      const historyForGemini = recentHistory.slice(0, -1);
+      const currentUserMsg = cleanText;
+
+      // 7. Send ALL other freeform, conversational, and clinical queries to Gemini AI
+      const memory = blessyMemoryEngine.getPatientMemory(activeUserId);
+      const patientCtx = memory?.profile?.name
+        ? `The patient's name is ${memory.profile.name}.`
+        : (this.session.user?.fullName ? `The patient's name is ${this.session.user.fullName.split(' ')[0]}.` : '');
+      const conditionsCtx = (memory?.chronicConditions?.length)
+        ? `Known conditions: ${memory.chronicConditions.join(', ')}.`
+        : '';
+
+      const liveAiResponse = await blessyCognitiveBrain.answerMedicalQueryLiveWithHistory(
+        currentUserMsg,
+        lang,
+        memory,
+        historyForGemini,
+        `${patientCtx} ${conditionsCtx}`.trim()
+      );
+
+      if (liveAiResponse && liveAiResponse.message) {
+        liveAiResponse.detectedLanguage = (lang === 'english') ? 'english' : 'hindi';
+        this.session.history.push({ role: 'assistant', text: liveAiResponse.message, timestamp: Date.now() });
+        return liveAiResponse;
       }
     } catch (err) {
-      console.warn("Async AI dispatch fallback:", err);
+      console.warn('Async AI dispatch fallback:', err);
     }
 
     return this.processMessage(rawInput, attachment);
@@ -695,6 +751,29 @@ export class BlessyConversationEngine {
     // 13. Greetings
     // -------------------------------------------------------------
     if (['hello', 'hi', 'namaste', 'hey', 'blessy', 'hello blessy', 'नमस्ते', 'प्रणाम'].some(g => text === g || text.startsWith(g + ' '))) {
+      // If already greeted, give a helpful redirect instead of repeating the full greeting
+      if (this.session.greetedOnce) {
+        const chips = lang === 'hindi' ? [
+          { label: '🩺 उपलब्ध डॉक्टर देखें', action: 'show_doctors' },
+          { label: '💬 लक्षण बताएं', action: 'discuss_symptoms' },
+          { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' }
+        ] : lang === 'hinglish' ? [
+          { label: '🩺 Doctor panel dekhein', action: 'show_doctors' },
+          { label: '💬 Symptoms batayein', action: 'discuss_symptoms' },
+          { label: '📅 Appointment book karein', action: 'book_appointment' }
+        ] : [
+          { label: '🩺 Show available doctors', action: 'show_doctors' },
+          { label: '💬 Discuss symptoms', action: 'discuss_symptoms' },
+          { label: '📅 Book appointment', action: 'book_appointment' }
+        ];
+        const msg = lang === 'hindi'
+          ? 'जी हाँ! मैं यहाँ हूँ। आप लक्षण बता सकते हैं, डॉक्टर देख सकते हैं, या अपॉइंटमेंट बुक कर सकते हैं।'
+          : lang === 'hinglish'
+          ? 'Haan! Main yahan hoon. Aap apne symptoms bata sakte hain, doctor dekh sakte hain, ya appointment book kar sakte hain.'
+          : 'Yes, I am here! You can tell me your symptoms, browse available doctors, or book an appointment.';
+        return { type: 'greeting_ack', detectedLanguage: lang === 'english' ? 'english' : 'hindi', message: msg, actionChips: chips };
+      }
+      this.session.greetedOnce = true;
       return this.generateGreeting(lang, this.session.user);
     }
 
@@ -702,6 +781,49 @@ export class BlessyConversationEngine {
     // 14. Default Helpful Clinical Guidance Fallback
     // -------------------------------------------------------------
     return this.handleDefaultFallback(text, lang);
+  }
+
+  // -------------------------------------------------------------
+  // DEFAULT FALLBACK: Smart contextual prompt (Alexa-style)
+  // -------------------------------------------------------------
+  handleDefaultFallback(text, lang) {
+    const firstName = this.session.user?.fullName?.split(' ')[0] || '';
+    const name = firstName ? ` ${firstName}` : '';
+
+    if (lang === 'hindi') {
+      return {
+        type: 'default_guidance',
+        detectedLanguage: 'hindi',
+        message: `मैं आपकी मदद के लिए यहाँ हूँ${name}। आप मुझसे इन विषयों पर बात कर सकते हैं:\n\n• 🤒 **लक्षण** — बुखार, सिरदर्द, खांसी, पेट दर्द आदि\n• 🩺 **डॉक्टर खोजें** — विशेषज्ञ या सामान्य चिकित्सक\n• 📅 **अपॉइंटमेंट बुक करें**\n• 💊 **दवाई या घरेलू उपाय** जानें\n\nआज आप किस बारे में जानना चाहते हैं?`,
+        actionChips: [
+          { label: '🩺 डॉक्टर देखें', action: 'show_doctors' },
+          { label: '💬 लक्षण बताएं', action: 'discuss_symptoms' },
+          { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' }
+        ]
+      };
+    }
+    if (lang === 'hinglish') {
+      return {
+        type: 'default_guidance',
+        detectedLanguage: 'hindi',
+        message: `Main yahan hoon${name} aapki madad ke liye! Aap mujhse in topics par baat kar sakte hain:\n\n• 🤒 **Symptoms** — bukhar, sar dard, khansi, pet dard, etc.\n• 🩺 **Doctor dhundein** — specialist ya general physician\n• 📅 **Appointment book karein**\n• 💊 **Dawai ya gharelu nuskhe** janein\n\nAaj aap kya jaanna chahte hain?`,
+        actionChips: [
+          { label: '🩺 Doctors dekhein', action: 'show_doctors' },
+          { label: '💬 Symptoms batayein', action: 'discuss_symptoms' },
+          { label: '📅 Appointment book karein', action: 'book_appointment' }
+        ]
+      };
+    }
+    return {
+      type: 'default_guidance',
+      detectedLanguage: 'english',
+      message: `I am here to help${name}! Here is what I can assist you with:\n\n• 🤒 **Symptoms** — fever, headache, cough, stomach pain, etc.\n• 🩺 **Find a doctor** — specialist or general physician\n• 📅 **Book an appointment**\n• 💊 **Medicines or home care** advice\n\nWhat would you like to know today?`,
+      actionChips: [
+        { label: '🩺 Show available doctors', action: 'show_doctors' },
+        { label: '💬 Discuss symptoms', action: 'discuss_symptoms' },
+        { label: '📅 Book appointment', action: 'book_appointment' }
+      ]
+    };
   }
 
   // -------------------------------------------------------------

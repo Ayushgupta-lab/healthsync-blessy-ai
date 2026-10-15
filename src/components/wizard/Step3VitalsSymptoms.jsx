@@ -161,24 +161,6 @@ export default function Step3VitalsSymptoms({ vitals, onChangeVitals, onBack, on
           })}
         </div>
 
-        {/* Severity Slider */}
-        <div className="pt-3 border-t border-brand-border/60">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-slate-300 font-medium">Discomfort / Pain Level:</span>
-            <span className="font-semibold text-brand-tealLight">
-              {vitals.painLevel || 3} / 10 ({vitals.painLevel > 6 ? 'Severe' : vitals.painLevel > 3 ? 'Moderate' : 'Mild'})
-            </span>
-          </div>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            value={vitals.painLevel || 3}
-            onChange={(e) => onChangeVitals({ ...vitals, painLevel: parseInt(e.target.value, 10) })}
-            className="w-full accent-brand-teal bg-brand-dark h-1.5 rounded-lg cursor-pointer"
-          />
-        </div>
-
         {/* Specific Complaints / Description */}
         <div className="pt-3 border-t border-brand-border/60">
           <label className="block text-xs font-medium text-slate-300 mb-1.5">

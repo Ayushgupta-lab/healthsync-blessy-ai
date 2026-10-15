@@ -32,6 +32,9 @@ export default function VoiceOverlayModal({ isOpen, onClose, user = null }) {
       blessyConversationEngine.setUserContext(user);
     }
 
+    // Reset greeting flag so each new session opens with one proper greeting
+    blessyConversationEngine.session.greetedOnce = false;
+
     // 2. Generate personalized greeting (patient e.g. 'Hello Ayush', doctor e.g. 'Hello Dr. Akhilesh')
     const isHinglish = language === 'hi-IN';
     const greeting = blessyConversationEngine.generateGreeting(isHinglish, user);
@@ -138,13 +141,7 @@ export default function VoiceOverlayModal({ isOpen, onClose, user = null }) {
         // 3. Safe speech synthesis in the matching language (non-blocking)
         if (!isMuted) {
           try {
-            const speechSummary = (response.message || '')
-              .replace(/###/g, '')
-              .replace(/\*\*/g, '')
-              .replace(/\n/g, ' ')
-              .substring(0, 200);
-
-            voiceStreamClient.speak(speechSummary, {
+            voiceStreamClient.speak(response.message, {
               detectedLanguage: response.detectedLanguage,
               lang: response.detectedLanguage === 'hindi' ? 'hi-IN' : (language === 'en-US' ? 'en-US' : 'en-IN')
             });

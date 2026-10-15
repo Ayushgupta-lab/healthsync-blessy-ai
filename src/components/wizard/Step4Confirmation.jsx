@@ -35,7 +35,7 @@ export default function Step4Confirmation({
         patientAge: parseInt(vitals.patientAge, 10) || 29,
         bloodGroup: vitals.bloodGroup || 'O+',
         symptoms: vitals.symptoms || 'General Clinical Consultation',
-        urgency: vitals.painLevel > 6 ? 'urgent' : 'routine',
+        urgency: vitals.urgency || 'routine',
         fee: doctor.consultationFee || '₹800'
       };
 

@@ -18,6 +18,14 @@ export class VoiceStreamClient {
     this.synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
     this.isSpeaking = false;
     this.isContinuousCall = true; // Continuous hands-free voice assistant loop
+
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.onvoiceschanged = () => {
+          try { window.speechSynthesis.getVoices(); } catch {}
+        };
+      } catch {}
+    }
   }
 
   on(event, cb) {
@@ -124,12 +132,22 @@ export class VoiceStreamClient {
     };
 
     this.recognition.onerror = (err) => {
+      // 'no-speech' is normal conversational silence, do not break stream
+      if (err.error === 'no-speech') {
+        return;
+      }
       this.emit('stream_error', err.error);
     };
 
     this.recognition.onend = () => {
       if (this.state === 'STREAMING' && !this.isSpeaking && this.isContinuousCall && !this.isMuted) {
-        try { this.recognition.start(); } catch {}
+        setTimeout(() => {
+          try {
+            if (this.state === 'STREAMING' && !this.isSpeaking && !this.isMuted) {
+              this.recognition.start();
+            }
+          } catch {}
+        }, 150);
       }
     };
 
@@ -184,19 +202,43 @@ export class VoiceStreamClient {
 
   speak(text, options = {}) {
     if (!this.synth) return;
-    this.synth.cancel();
+    try {
+      this.synth.cancel();
+      if (this.synth.resume) this.synth.resume();
+    } catch {}
 
     // 1. Temporarily pause continuous speech recognition so TTS doesn't loop back
     if (this.recognition && this.state === 'STREAMING') {
       try { this.recognition.abort(); } catch {}
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Clean text of markdown, asterisks, brackets, URLs, and emojis for natural speech
+    let cleanText = (text || '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[*#_`~>•-]/g, ' ')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!cleanText) return;
+
+    // Speak concise clinical summary (~350 characters at sentence boundary)
+    if (cleanText.length > 350) {
+      const sentenceEnd = cleanText.substring(0, 350).lastIndexOf('.');
+      if (sentenceEnd > 120) {
+        cleanText = cleanText.substring(0, sentenceEnd + 1);
+      } else {
+        cleanText = cleanText.substring(0, 320) + '...';
+      }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     
     // Choose appropriate voice locale based on detected language
     const targetLang = options.lang || (options.detectedLanguage === 'hindi' ? 'hi-IN' : this.language) || 'en-IN';
     utterance.lang = targetLang;
-    utterance.rate = 1.02;
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
     try {
@@ -206,25 +248,32 @@ export class VoiceStreamClient {
           const hiVoice = voices.find(v => v.lang.startsWith('hi') || v.name.toLowerCase().includes('hindi'));
           if (hiVoice) utterance.voice = hiVoice;
         } else {
-          const enVoice = voices.find(v => v.lang.startsWith('en-IN') || v.lang.startsWith('en'));
+          const enVoice = voices.find(v => v.lang.startsWith('en-IN') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')) || v.lang.startsWith('en'));
           if (enVoice) utterance.voice = enVoice;
         }
       }
     } catch {}
 
     this.isSpeaking = true;
-    this.emit('speech_synthesis_start', text);
+    this.emit('speech_synthesis_start', cleanText);
 
+    let finished = false;
     const finishSpeaking = () => {
+      if (finished) return;
+      finished = true;
       this.isSpeaking = false;
       this.emit('speech_synthesis_end');
       if (options.onEnd) options.onEnd();
 
       // Automatically resume listening in continuous call mode!
       if (this.isContinuousCall && this.state === 'STREAMING' && !this.isMuted) {
-        try {
-          if (this.recognition) this.recognition.start();
-        } catch {}
+        setTimeout(() => {
+          try {
+            if (this.recognition && this.state === 'STREAMING' && !this.isSpeaking && !this.isMuted) {
+              this.recognition.start();
+            }
+          } catch {}
+        }, 200);
       }
     };
 

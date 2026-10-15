@@ -517,15 +517,17 @@ export async function handleApiRequest(req, res, parsedUrl) {
       const body = await readBody();
       const prompt = body.prompt || body.message || '';
       const messages = body.messages || [];
+      const history = body.history || [];
       const language = body.language || 'auto';
       const context = body.context || {};
+      const systemPrompt = body.systemPrompt || null;
 
-      if (!prompt && (!messages || messages.length === 0)) {
+      if (!prompt && (!messages || messages.length === 0) && (!history || history.length === 0)) {
         return sendJson(400, { error: "Prompt or messages array is required." });
       }
 
       try {
-        const aiResponse = await askBlessyAI({ prompt, messages, language, context });
+        const aiResponse = await askBlessyAI({ prompt, messages, history, language, context, systemPrompt });
         return sendJson(200, aiResponse);
       } catch (aiErr) {
         console.error("AI Generation failed:", aiErr);

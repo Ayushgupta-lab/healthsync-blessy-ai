@@ -3,8 +3,7 @@ import { storageService } from '../services/storageService.js';
 
 export class BlessyCognitiveBrain {
   constructor() {
-    this.geminiApiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
-      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || null;
+    this.geminiApiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || '';
   }
 
   // Detect open-ended medical questions, why/how queries, home care, and conceptual health inquiries
@@ -122,8 +121,203 @@ export class BlessyCognitiveBrain {
       console.warn("Backend port 3000 check failed:", crossErr.message);
     }
 
-    // 3. High-resilience fallback to local knowledge base
+    // 3. Direct Browser-to-Gemini API call (if backend / proxy is unreachable)
+    if (this.geminiApiKey) {
+      try {
+        const geminiRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': this.geminiApiKey
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: `You are Blessy AI, a clinical assistant at HealthSync Clinic. Reply ${isHindi ? 'in natural, caring Hindi/Hinglish' : 'in clear, empathetic English'}. Keep replies structured, concise, and highlight doctor specialists when appropriate.` }]
+            },
+            contents: [
+              { role: 'user', parts: [{ text: text }] }
+            ],
+            generationConfig: {
+              temperature: 0.6,
+              maxOutputTokens: 600
+            }
+          })
+        });
+        if (geminiRes.ok) {
+          const gData = await geminiRes.json();
+          const gText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (gText) {
+            return {
+              type: 'cognitive_medical_answer',
+              category: 'generative_ai',
+              modelUsed: 'gemini-flash-latest',
+              message: gText.trim(),
+              actionChips: isHindi ? [
+                { label: '🩺 डॉक्टर सूची देखें', action: 'show_doctors' },
+                { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' },
+                { label: '👨‍⚕️ डॉ. अखिलेश शर्मा (MD)', action: 'select_doctor_doc_akhilesh' }
+              ] : [
+                { label: '🩺 Show Available Doctors', action: 'show_doctors' },
+                { label: '📅 Book Appointment', action: 'book_appointment' },
+                { label: '👨‍⚕️ Dr. Akhilesh Sharma (MD)', action: 'select_doctor_doc_akhilesh' }
+              ]
+            };
+          }
+        }
+      } catch (browserErr) {
+        console.warn("Direct browser Gemini attempt failed:", browserErr.message);
+      }
+    }
+
+    // 4. High-resilience fallback to local knowledge base
     return this.answerMedicalQuery(text, langParam, patientMemory);
+  }
+
+  // -----------------------------------------------------------------------
+  // Multi-turn context-aware Gemini call (like Google Assistant / Alexa)
+  // Sends conversation history so Blessy remembers what was said before
+  // -----------------------------------------------------------------------
+  async answerMedicalQueryLiveWithHistory(text, langParam = 'english', patientMemory = null, conversationHistory = [], extraContext = '') {
+    const isHindi = langParam === 'hindi' || langParam === 'hinglish';
+    const langLabel = isHindi ? 'natural, warm Hindi or Hinglish (Roman script)' : 'clear, empathetic English';
+
+    const systemPrompt = `You are Blessy, a smart and caring AI medical assistant at HealthSync Clinic (Dr. Akhilesh Sharma & specialist team, Indore).
+
+Your personality: Warm, professional, proactive — like Amazon Alexa or Google Assistant but specialized for healthcare.
+
+Your capabilities:
+- Answer health & symptom questions with clinical accuracy
+- Recommend the right specialist doctor for the user's problem
+- Help book, reschedule, or check clinic appointments
+- Give safe home-care or first-aid advice
+- Triage emergencies and direct to 112 / nearest hospital
+
+Rules you MUST follow:
+1. NEVER repeat greetings like "Hello" or "Namaste" after the first message. Just answer directly.
+2. Keep replies concise (2-5 sentences for simple queries, structured for complex ones).
+3. Always end with ONE clear next step (e.g. "Shall I book an appointment?" or "Kya main appointment book karoon?").
+4. Recommend a doctor from our team when relevant: Dr. Akhilesh Sharma (MD, General Medicine), Dr. Priya Sharma (Neurology), Dr. Rohan Patel (Orthopedics), Dr. Ananya Khan (Pediatrics), Dr. James Vance (Cardiology).
+5. Reply in ${langLabel}.
+6. Stay strictly on medical, health, and appointment topics. For off-topic questions, politely redirect.
+${extraContext ? `\nPatient context: ${extraContext}` : ''}`;
+
+    // Build contents array with history + current message
+    const historyContents = (conversationHistory || []).filter(h => h && h.parts?.[0]?.text);
+    const contents = [
+      ...historyContents,
+      { role: 'user', parts: [{ text: text }] }
+    ];
+
+    const makeChips = () => isHindi ? [
+      { label: '🩺 डॉक्टर सूची देखें', action: 'show_doctors' },
+      { label: '📅 अपॉइंटमेंट बुक करें', action: 'book_appointment' },
+      { label: '👨‍⚕️ डॉ. अखिलेश शर्मा (MD)', action: 'select_doctor_doc_akhilesh' }
+    ] : [
+      { label: '🩺 Show Available Doctors', action: 'show_doctors' },
+      { label: '📅 Book Appointment', action: 'book_appointment' },
+      { label: '👨‍⚕️ Dr. Akhilesh Sharma (MD)', action: 'select_doctor_doc_akhilesh' }
+    ];
+
+    // 1. Try backend server (/api/ai/chat) with history
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          language: langParam,
+          history: historyContents,
+          systemPrompt,
+          context: {
+            patientName: patientMemory?.profile?.name || '',
+            conditions: patientMemory?.chronicConditions || []
+          }
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.message) {
+          return { type: 'cognitive_medical_answer', category: 'generative_ai', modelUsed: data.modelUsed || 'gemini', message: data.message, actionChips: makeChips() };
+        }
+      }
+    } catch (err) {
+      console.warn('Backend /api/ai/chat failed:', err.message);
+    }
+
+    // 2. Cross-origin backend fallback
+    try {
+      if (typeof window !== 'undefined' && window.location.port !== '3000') {
+        const fallbackRes = await fetch('http://localhost:3000/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: text,
+            language: langParam,
+            history: historyContents,
+            systemPrompt,
+            context: {
+              patientName: patientMemory?.profile?.name || '',
+              conditions: patientMemory?.chronicConditions || []
+            }
+          })
+        });
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          if (data?.message) {
+            return { type: 'cognitive_medical_answer', category: 'generative_ai', modelUsed: data.modelUsed || 'gemini', message: data.message, actionChips: makeChips() };
+          }
+        }
+      }
+    } catch (crossErr) {
+      console.warn('Backend port 3000 fallback failed:', crossErr.message);
+    }
+
+    // 3. Direct browser → Gemini API with full conversation history
+    if (this.geminiApiKey) {
+      const geminiModels = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b'
+      ];
+      for (const model of geminiModels) {
+        try {
+          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-goog-api-key': this.geminiApiKey
+            },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents,
+              generationConfig: {
+                temperature: 0.65,
+                maxOutputTokens: 500,
+                stopSequences: []
+              }
+            })
+          });
+          if (geminiRes.ok) {
+            const gData = await geminiRes.json();
+            const gText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (gText && gText.trim().length > 5) {
+              return {
+                type: 'cognitive_medical_answer',
+                category: 'generative_ai',
+                modelUsed: model,
+                message: gText.trim(),
+                actionChips: makeChips()
+              };
+            }
+          }
+        } catch (browserErr) {
+          console.warn(`Gemini ${model} direct attempt failed:`, browserErr.message);
+        }
+      }
+    }
+
+    // 4. Final fallback to local knowledge base
+    return this.answerMedicalQueryLive(text, langParam, patientMemory);
   }
 
   // High-Precision Semantic Medical Reasoning Engine

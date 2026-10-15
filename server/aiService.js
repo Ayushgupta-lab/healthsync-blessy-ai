@@ -1,4 +1,4 @@
-// Blessy AI Service: Production-Grade LLM Adapter via OpenRouter (Gemini 3.8 Flash & GPT-4o Mini)
+// Blessy AI Service: Production-Grade Direct Google Gemini 3.8 Flash Adapter & Clinical Reasoner
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,9 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
-const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-const FALLBACK_MODEL = 'google/gemini-3.8-flash';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
 
 const SYSTEM_PROMPT = `
 You are "Blessy AI", an intelligent, empathetic, and clinical-grade AI Medical Assistant and Clinic Executive PA for HealthSync Clinic.
@@ -30,75 +30,158 @@ Key Guidelines:
    Recommend the appropriate specialist by name when relevant.
 
 3. Multilingual Communication:
-   - If the user writes in Hindi or Hinglish (e.g., "mujhe bukhar hai", "sar dard ho raha hai", "kya karu"), reply in warm, natural, and fluent Hinglish / Hindi.
-   - If the user writes in English, reply in polished, professional English.
+   - If the user writes or speaks in Hindi or Hinglish (e.g., "mujhe bukhar hai", "sar dard ho raha hai", "kya karu"), reply in warm, natural, and fluent Hinglish / Hindi.
+   - If the user writes or speaks in English, reply in polished, professional English.
 
 4. Formatting:
    - Use bold highlights, short bullet points, and clean structure.
    - Keep answers concise, actionable, and easy to read on mobile and desktop.
+   - For voice mode, keep explanations conversational, clear, and direct.
 `;
 
-export async function askBlessyAI({ prompt, messages = [], language = 'auto', context = {} }) {
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || OPENROUTER_API_KEY;
+export async function askBlessyAI({ prompt, messages = [], history = [], language = 'auto', context = {}, systemPrompt: customSystemPrompt = null }) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || GEMINI_API_KEY;
 
-  if (!apiKey) {
-    throw new Error("OpenRouter / Gemini API Key is missing in environment variables.");
+  if (!apiKey && !OPENROUTER_API_KEY) {
+    throw new Error("Gemini API Key is missing in environment variables.");
   }
 
-  // Build conversation history
-  const conversationMessages = [
-    { role: 'system', content: SYSTEM_PROMPT }
-  ];
-
-  if (context.patientName) {
-    conversationMessages.push({
-      role: 'system',
-      content: `Active Patient Context: Name: ${context.patientName}, Known Conditions: ${context.conditions?.join(', ') || 'None reported'}.`
-    });
-  }
-
-  if (messages && messages.length > 0) {
-    messages.slice(-6).forEach(m => {
-      conversationMessages.push({
-        role: m.sender === 'user' || m.role === 'user' ? 'user' : 'assistant',
-        content: m.text || m.content || ''
-      });
-    });
-  }
-
-  if (prompt) {
-    conversationMessages.push({
-      role: 'user',
-      content: prompt
-    });
-  }
-
-  // Attempt 1: Try Primary Model (Google Gemini 3.8 Flash)
-  try {
-    const result = await callOpenRouter(apiKey, DEFAULT_MODEL, conversationMessages);
-    return {
-      success: true,
-      message: result,
-      modelUsed: DEFAULT_MODEL,
-      status: 'online'
-    };
-  } catch (primaryErr) {
-    console.warn(`Primary model (${DEFAULT_MODEL}) failed: ${primaryErr.message}. Attempting fallback (${FALLBACK_MODEL})...`);
-    
-    // Attempt 2: Fallback Model (OpenAI GPT-4o Mini)
-    try {
-      const fallbackResult = await callOpenRouter(apiKey, FALLBACK_MODEL, conversationMessages);
-      return {
-        success: true,
-        message: fallbackResult,
-        modelUsed: FALLBACK_MODEL,
-        status: 'online'
-      };
-    } catch (fallbackErr) {
-      console.error("All AI model attempts failed:", fallbackErr);
-      throw new Error(`AI Gateway Error: ${fallbackErr.message}`);
+  // 1. Build System Instruction Context (use custom override if provided)
+  let fullSystemPrompt = customSystemPrompt || SYSTEM_PROMPT.trim();
+  if (!customSystemPrompt) {
+    if (context.patientName) {
+      fullSystemPrompt += `\n\nActive Patient Context: Name: ${context.patientName}, Known Conditions: ${context.conditions?.join(', ') || 'None reported'}.`;
+    }
+    if (language && language !== 'auto') {
+      fullSystemPrompt += `\n\nTarget Output Language: ${language}.`;
     }
   }
+
+  // 2. Build Gemini contents — prefer new `history` format (Gemini-native), else use legacy `messages`
+  const contents = [];
+
+  const turnsSource = (history && history.length > 0) ? history : messages;
+
+  if (turnsSource && turnsSource.length > 0) {
+    for (const m of turnsSource.slice(-8)) {
+      // Support both Gemini-native format {role, parts} and legacy {sender/role, text/content}
+      if (m.parts && Array.isArray(m.parts)) {
+        // Already Gemini-native
+        const role = m.role === 'model' ? 'model' : 'user';
+        if (contents.length > 0 && contents[contents.length - 1].role === role) {
+          contents[contents.length - 1].parts[0].text += `\n${m.parts[0]?.text || ''}`;
+        } else {
+          contents.push({ role, parts: [{ text: m.parts[0]?.text || '' }] });
+        }
+      } else {
+        const text = (m.text || m.content || '').trim();
+        if (!text) continue;
+        const role = (m.sender === 'user' || m.role === 'user') ? 'user' : 'model';
+        if (contents.length > 0 && contents[contents.length - 1].role === role) {
+          contents[contents.length - 1].parts[0].text += `\n${text}`;
+        } else {
+          contents.push({ role, parts: [{ text }] });
+        }
+      }
+    }
+  }
+
+  if (prompt && String(prompt).trim()) {
+    const userPrompt = String(prompt).trim();
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts[0].text += `\n${userPrompt}`;
+    } else {
+      contents.push({ role: 'user', parts: [{ text: userPrompt }] });
+    }
+  }
+
+  // Safety fallback if contents is empty
+  if (contents.length === 0) {
+    contents.push({ role: 'user', parts: [{ text: 'Hello, I need medical help.' }] });
+  }
+
+  // Ensure first turn is 'user' for Gemini API requirements
+  if (contents[0].role !== 'user') {
+    contents.unshift({ role: 'user', parts: [{ text: 'Clinical Consultation Started' }] });
+  }
+
+  // Iterate through available Gemini models in resilient order
+  for (const model of GEMINI_MODELS) {
+    try {
+      const result = await callGeminiAPI(apiKey, model, fullSystemPrompt, contents);
+      return {
+        success: true,
+        message: result,
+        modelUsed: model,
+        provider: 'Google Gemini API',
+        status: 'online'
+      };
+    } catch (modelErr) {
+      console.warn(`Gemini model (${model}) notice: ${modelErr.message}. Trying next resilient model...`);
+    }
+  }
+
+  // OpenRouter fallback if configured
+  if (OPENROUTER_API_KEY) {
+    try {
+      const orResult = await callOpenRouter(OPENROUTER_API_KEY, 'google/gemini-flash-1.5', [
+        { role: 'system', content: fullSystemPrompt },
+        ...messages.map(m => ({
+          role: (m.sender === 'user' || m.role === 'user') ? 'user' : 'assistant',
+          content: m.text || m.content || ''
+        })),
+        ...(prompt ? [{ role: 'user', content: prompt }] : [])
+      ]);
+      return {
+        success: true,
+        message: orResult,
+        modelUsed: 'openrouter/gemini-flash-1.5',
+        status: 'online'
+      };
+    } catch (orErr) {
+      console.error("OpenRouter fallback failed:", orErr);
+    }
+  }
+
+  throw new Error("Unable to reach Gemini API. All model attempts failed.");
+}
+
+async function callGeminiAPI(apiKey, model, systemPrompt, contents) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+  const payload = {
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    contents: contents,
+    generationConfig: {
+      temperature: 0.6,
+      maxOutputTokens: 800
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-goog-api-key': apiKey.trim()
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || `HTTP ${response.status}: Gemini request failed`);
+  }
+
+  const candidate = data.candidates?.[0];
+  const text = candidate?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error("Empty candidate response returned by Gemini API.");
+  }
+
+  return text.trim();
 }
 
 async function callOpenRouter(apiKey, model, messages) {
@@ -132,12 +215,12 @@ async function callOpenRouter(apiKey, model, messages) {
 }
 
 export function getAIStatus() {
-  const hasKey = Boolean(process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || OPENROUTER_API_KEY);
+  const hasKey = Boolean(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || GEMINI_API_KEY);
   return {
     configured: hasKey,
-    provider: 'OpenRouter (Google Gemini 3.8 & OpenAI)',
-    activeModel: DEFAULT_MODEL,
-    fallbackModel: FALLBACK_MODEL,
+    provider: 'Google Gemini Generative AI (Live)',
+    activeModel: GEMINI_MODELS[0],
+    availableModels: GEMINI_MODELS,
     liveStatus: hasKey ? 'connected' : 'unconfigured'
   };
 }
